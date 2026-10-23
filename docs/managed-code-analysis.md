@@ -477,6 +477,14 @@ characters. These candidates follow [Microsoft's native library loading rules](h
 These filename rules compare declared and observed identities; they do not
 establish which library the runtime loaded.
 
+Entry points match their exact name. Unless the declaration sets
+ExactSpelling, a charset-suffixed name is also an inferred candidate: `A` for
+ANSI or an unspecified charset, `W` for Unicode, and `W` for `Auto` against a
+PE module, where `Auto` means Unicode. `Auto` has no suffix candidate for other
+formats because the supplied Evidence does not establish its meaning there.
+These follow Microsoft's [character set name matching](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/specifying-a-character-set)
+and remain inferences, not proof of the runtime's binding.
+
 Metadata tokens are not native addresses. Native body mapping for C++/CLI,
 ReadyToRun, NativeAOT, and IL2CPP requires separately verified format and provider
 support. The managed static tools do not recover those mappings. The optional

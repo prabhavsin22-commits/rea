@@ -71,13 +71,14 @@ const nativeEvidenceWithExports = (
 const nativeFunctionEvidence = (
   modulePath: string,
   format: "elf" | "mach-o" | "pe" | "file",
+  name = "open_native",
 ) => {
   const native = exampleInput().native_observations[0];
   if (native === undefined) throw new Error("missing native provider");
   const dossier = functionDossierSchema.parse({
     procedure: {
       address: "0x1000",
-      name: "open_native",
+      name,
       classification: {
         external: false,
         thunk: false,
@@ -114,7 +115,13 @@ const nativeFunctionEvidence = (
   );
 };
 
-const inputWithImportScope = (scope: string | null) => {
+const inputWithImportScope = (
+  scope: string | null,
+  declaration: {
+    readonly char_set?: "not-specified" | "ansi" | "unicode" | "auto";
+    readonly no_mangle?: boolean;
+  } = {},
+) => {
   const input = exampleInput();
   const managed = input.managed_boundaries;
   const normalized = managedNativeBoundaryInspectionSchema.parse(
@@ -130,6 +137,7 @@ const inputWithImportScope = (scope: string | null) => {
         pinvoke_imports: normalized.pinvoke_imports.map((item) => ({
           ...item,
           import_scope_name: scope,
+          ...declaration,
         })),
       },
       rawResult: null,
@@ -407,6 +415,51 @@ it("keeps explicit PE module suffixes distinct and permits the Windows DLL varia
     verify("C:\\examples\\nativehelper.dll", "C:\\other\\nativehelper.dll"),
   ).toMatchObject({ status: "contradicted", basis: "module-mismatch" });
 });
+
+it.each([
+  // An unspecified charset is ANSI: the runtime probes the A entry point only.
+  ["not-specified", false, "pe", "open_nativeA", "decorated-name-candidate"],
+  ["not-specified", false, "pe", "open_nativeW", "no-native-candidate"],
+  ["not-specified", false, "elf", "open_nativeA", "decorated-name-candidate"],
+  ["ansi", false, "pe", "open_nativeA", "decorated-name-candidate"],
+  // Auto is Unicode for Windows PE modules and has no known suffix elsewhere.
+  ["auto", false, "pe", "open_nativeW", "decorated-name-candidate"],
+  ["auto", false, "pe", "open_nativeA", "no-native-candidate"],
+  ["auto", false, "elf", "open_nativeW", "no-native-candidate"],
+  ["unicode", false, "pe", "open_nativeW", "decorated-name-candidate"],
+  // ExactSpelling suppresses every suffixed spelling.
+  ["not-specified", true, "pe", "open_nativeA", "no-native-candidate"],
+  ["auto", true, "pe", "open_nativeW", "no-native-candidate"],
+] as const)(
+  "derives %s charset (ExactSpelling %s) suffixes for a %s %s export as %s",
+  (charSet, noMangle, format, name, basis) => {
+    const modulePath =
+      format === "pe"
+        ? "/examples/nativehelper.dll"
+        : "/examples/libnativehelper.so";
+    const result = verifyManagedNativeBoundaries({
+      ...inputWithImportScope(
+        format === "pe" ? "nativehelper.dll" : "nativehelper",
+        {
+          char_set: charSet,
+          no_mangle: noMangle,
+        },
+      ),
+      native_observations: [nativeFunctionEvidence(modulePath, format, name)],
+    }).pinvoke_imports[0];
+
+    expect(result).toMatchObject(
+      basis === "decorated-name-candidate"
+        ? {
+            status: "inferred",
+            basis,
+            confidence: "inferred",
+            matched_native: { name },
+          }
+        : { status: "unresolved", basis, candidates: [] },
+    );
+  },
+);
 
 it("keeps empty identities unknown and compares suffix-only identities as data", () => {
   for (const scope of [null, "", "   "]) {

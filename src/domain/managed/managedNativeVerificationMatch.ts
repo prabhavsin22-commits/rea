@@ -247,16 +247,32 @@ const hasModuleIdentity = (symbol: NativeSymbol): boolean =>
     (value) => value !== null && moduleFilename(value, false).length > 0,
   );
 
+/**
+ * Without ExactSpelling the runtime also probes a charset-suffixed entry
+ * point. An unspecified charset behaves as ANSI; Auto means Unicode only for
+ * a Windows PE module, so its suffix stays unknown for other formats.
+ */
+const effectiveCharSet = (
+  charSet: PinvokeImport["char_set"],
+  format: string | null,
+): PinvokeImport["char_set"] => {
+  if (charSet === "not-specified") return "ansi";
+  if (charSet === "auto") return format === "pe" ? "unicode" : "unknown";
+  return charSet;
+};
+
 const candidateNames = (
   managed: Pick<
     PinvokeImport,
     "import_name" | "char_set" | "call_convention" | "no_mangle"
   >,
+  format: string | null,
 ): readonly string[] => {
   const names = new Set<string>([managed.import_name]);
   if (!managed.no_mangle) {
-    if (managed.char_set === "unicode") names.add(`${managed.import_name}W`);
-    if (managed.char_set === "ansi") names.add(`${managed.import_name}A`);
+    const charSet = effectiveCharSet(managed.char_set, format);
+    if (charSet === "unicode") names.add(`${managed.import_name}W`);
+    if (charSet === "ansi") names.add(`${managed.import_name}A`);
     if (managed.call_convention === "stdcall") {
       names.add(`_${managed.import_name}`);
       names.add(`_${managed.import_name}@0`);
@@ -287,9 +303,11 @@ const matchPinvoke = (
   supportedNativeEvidence: number,
   moduleFormatsByEvidenceId: ReadonlyMap<string, string | null>,
 ): PinvokeCandidateMatch => {
-  const names = candidateNames(managed);
   const allCandidates = symbols.filter((symbol) =>
-    names.some((name) => sameSymbolName(name, symbol)),
+    candidateNames(
+      managed,
+      moduleFormatsByEvidenceId.get(symbol.evidence_id) ?? null,
+    ).some((name) => sameSymbolName(name, symbol)),
   );
   const [first, ...remaining] = allCandidates;
   if (first === undefined)
