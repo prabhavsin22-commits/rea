@@ -172,6 +172,37 @@ const keepsGeneratedNamesAmbiguous = (): void => {
   expect(stable.status).toBe("changed");
 };
 
+const keepsBlankNamesAmbiguous = (name: string): void => {
+  const blankNamed = (base: "0x1000" | "0x2000") =>
+    functionDossierSchema.parse({
+      ...dossier("return 0;", base),
+      procedure: {
+        ...procedure(base, name),
+        signature: "int helper(void)",
+        locals: [],
+      },
+    });
+  const result = compareFunctions(
+    functionSnapshotFixture(observe("8", blankNamed("0x1000"))),
+    functionSnapshotFixture(observe("9", blankNamed("0x2000"))),
+  );
+  expect(result.function_match).toEqual({
+    status: "ambiguous",
+    method: "explicit",
+    left_name: name,
+    right_name: name,
+  });
+  expect(
+    result.dimensions.find(({ dimension }) => dimension === "identity"),
+  ).toMatchObject({
+    status: "unknown",
+    limitations: expect.arrayContaining([
+      "Blank function names are not stable cross-version identity.",
+    ]),
+  });
+  expect(result.status).toBe("unknown");
+};
+
 describe("function comparison normalized identity", () => {
   it("retains unresolved call details alongside missing facet coverage", () => {
     const value: Record<string, unknown> = {
@@ -297,26 +328,58 @@ describe("function comparison normalized identity", () => {
       ).toMatchObject({ status: "unknown" });
     },
   );
+
+  it.each([
+    { label: "empty", name: "" },
+    { label: "spaces", name: "   " },
+    { label: "tab", name: "\t" },
+  ])("keeps $label procedure names ambiguous", ({ name }) => {
+    keepsBlankNamesAmbiguous(name);
+  });
 });
 
 describe("function comparison address-derived call names", () => {
   it.each([
-    { name: "sub_deallocate", status: "unchanged", diagnostic: undefined },
-    { name: "", status: "unknown", diagnostic: undefined },
+    {
+      name: "sub_deallocate",
+      direction: "callee",
+      status: "unchanged",
+      diagnostic: undefined,
+    },
+    { name: "", direction: "callee", status: "unknown", diagnostic: undefined },
+    {
+      name: "   ",
+      direction: "caller",
+      status: "unknown",
+      diagnostic: undefined,
+    },
     {
       name: "sub_deadbeef",
+      direction: "callee",
       status: "unknown",
       diagnostic: "Provider retained an unresolved call target.",
     },
-    { name: "FUN_00401000", status: "unknown", diagnostic: undefined },
-    { name: "FUN_initialize", status: "unchanged", diagnostic: undefined },
+    {
+      name: "FUN_00401000",
+      direction: "callee",
+      status: "unknown",
+      diagnostic: undefined,
+    },
+    {
+      name: "FUN_initialize",
+      direction: "callee",
+      status: "unchanged",
+      diagnostic: undefined,
+    },
   ])(
-    "preserves the calls dimension for callee $name",
-    ({ name, status, diagnostic }) => {
+    "preserves the calls dimension for $direction name $name",
+    ({ name, direction, status, diagnostic }) => {
       const calling = (base: "0x1000" | "0x2000") =>
         functionDossierSchema.parse({
           ...dossier("return helper();", base),
-          callees: [procedure(base === "0x1000" ? "0x1010" : "0x2010", name)],
+          [direction === "callee" ? "callees" : "callers"]: [
+            procedure(base === "0x1000" ? "0x1010" : "0x2010", name),
+          ],
         });
       const result = compareFunctions(
         functionSnapshotFixture(observe("6", calling("0x1000"))),
@@ -335,11 +398,11 @@ describe("function comparison address-derived call names", () => {
         ({ dimension }) => dimension === "calls",
       );
       expect(calls).toMatchObject({ status });
-      if (name.length === 0)
+      if (name.trim() === "")
         expect(calls).toMatchObject({
           status: "unknown",
           limitations: expect.arrayContaining([
-            "Empty callee or caller names cannot be matched safely.",
+            "Blank callee or caller names cannot be matched safely.",
           ]),
         });
       if (diagnostic !== undefined)

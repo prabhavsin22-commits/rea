@@ -228,9 +228,12 @@ export const sorted = <T>(values: readonly T[]): readonly T[] =>
 export const isAutoName = (name: string): boolean =>
   /^(?:sub_[0-9a-f]+|fcn\.[0-9a-f]+|FUN_[0-9a-f]+)$/iu.test(name);
 
-/** Empty and address-derived names cannot identify the same function across artifacts. */
+/** Blank and address-derived names cannot identify a function across artifacts. */
+export const isBlankFunctionName = (name: string): boolean =>
+  name.trim() === "";
+
 export const hasStableFunctionName = (name: string): boolean =>
-  name.length > 0 && !isAutoName(name);
+  !isBlankFunctionName(name) && !isAutoName(name);
 
 const parseAddress = (value: string) => {
   const parsed = nativeAddressCoordinateInputSchema.safeParse(value);

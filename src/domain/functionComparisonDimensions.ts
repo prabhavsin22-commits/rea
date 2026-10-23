@@ -8,6 +8,7 @@ import {
   identityProjection,
   hasStableFunctionName,
   isAutoName,
+  isBlankFunctionName,
   nameAndSwiftProjection,
   normalizeCfg,
   referencedStringProjection,
@@ -556,8 +557,8 @@ const compareIdentity = (
       leftCount: null,
       rightCount: null,
       limitations: [
-        ...(names.some((name) => name.length === 0)
-          ? ["Empty function names are not stable cross-version identity."]
+        ...(names.some(isBlankFunctionName)
+          ? ["Blank function names are not stable cross-version identity."]
           : []),
         ...(names.some(isAutoName)
           ? [
@@ -607,8 +608,8 @@ const compareCalls = (
       leftCount: leftValues.length,
       rightCount: rightValues.length,
       limitations: [
-        ...(unstableNames.some((name) => name.length === 0)
-          ? ["Empty callee or caller names cannot be matched safely."]
+        ...(unstableNames.some(isBlankFunctionName)
+          ? ["Blank callee or caller names cannot be matched safely."]
           : []),
         ...(unstableNames.some(isAutoName)
           ? ["Address-derived callee or caller names cannot be matched safely."]

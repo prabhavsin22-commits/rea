@@ -346,6 +346,23 @@ it("keeps generated and ambiguous procedure names from proving cross-artifact id
   expect.soft(generatedFunctions.result.status).toBe("unknown");
 });
 
+it.each(["", "   ", "\t"])(
+  "keeps references with blank procedure names unknown (%j)",
+  async (name) => {
+    const { client } = await createHarness();
+    const left = evidence(`blank-left-${name.length}`, "a", [
+      reference("0x1000", "0x1010", "call", { targetName: name }),
+    ]);
+    const right = evidence(
+      `blank-right-${name.length}`,
+      "b",
+      [reference("0x2000", "0x2020", "call", { targetName: name })],
+      { procedureAddress: "0x2000" },
+    );
+    expectReferences(await compare(client, left, right), "unknown");
+  },
+);
+
 it("normalizes numeric coordinates but preserves address spaces and source sites", async () => {
   const { client } = await createHarness();
   const at = (id: string, address: string) =>
