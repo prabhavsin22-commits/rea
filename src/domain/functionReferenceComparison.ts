@@ -1,6 +1,10 @@
 import { canonicalJson } from "./comparisonSemantics.js";
 import type { FunctionSnapshot } from "./functionDossierEvidence.js";
-import { isAutoName, sorted } from "./functionComparisonNormalization.js";
+import {
+  hasStableFunctionName,
+  isAutoName,
+  sorted,
+} from "./functionComparisonNormalization.js";
 import {
   referenceFactsCompatible,
   type ReferenceCompatibilityRow,
@@ -94,11 +98,7 @@ const endpoint = (
       reported_name: procedure?.name ?? null,
     };
   }
-  if (
-    procedure === null ||
-    procedure.name.length === 0 ||
-    isAutoName(procedure.name)
-  )
+  if (procedure === null || !hasStableFunctionName(procedure.name))
     return {
       kind: "unknown",
       reason:

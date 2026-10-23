@@ -302,6 +302,7 @@ describe("function comparison normalized identity", () => {
 describe("function comparison address-derived call names", () => {
   it.each([
     { name: "sub_deallocate", status: "unchanged", diagnostic: undefined },
+    { name: "", status: "unknown", diagnostic: undefined },
     {
       name: "sub_deadbeef",
       status: "unknown",
@@ -334,6 +335,13 @@ describe("function comparison address-derived call names", () => {
         ({ dimension }) => dimension === "calls",
       );
       expect(calls).toMatchObject({ status });
+      if (name.length === 0)
+        expect(calls).toMatchObject({
+          status: "unknown",
+          limitations: expect.arrayContaining([
+            "Empty callee or caller names cannot be matched safely.",
+          ]),
+        });
       if (diagnostic !== undefined)
         expect(calls).toMatchObject({
           status: "unknown",
