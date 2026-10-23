@@ -560,6 +560,34 @@ it("rejects a zlib member that expands past its declared size", async () => {
   });
 });
 
+it("leaves binary members of a PE carrier unmarked", async () => {
+  // The Windows bootloader sets no execute bit.
+  const pe = await writeArchive(
+    "binary-member-pe",
+    cArchiveExecutable({
+      layout: "2.1",
+      pythonVersion: 309,
+      pythonLibrary: "python39.dll",
+      carrier: Buffer.concat([Buffer.from("MZ"), Buffer.alloc(62)]),
+      members: [
+        {
+          name: "helper.dll",
+          typeCode: "b",
+          payload: Buffer.from("MZ"),
+          compress: false,
+        },
+      ],
+    }),
+  );
+  const reader = new PyInstallerArtifactReader(pe);
+  const listed = [];
+  for await (const entry of reader.entries()) listed.push(entry);
+  await reader.close();
+  expect(listed.find((entry) => entry.path === "helper.dll")).toMatchObject({
+    executable: false,
+  });
+});
+
 it("reads a compressed member whose uncompressed size is zero", async () => {
   const path = await writeArchive(
     "empty-compressed",

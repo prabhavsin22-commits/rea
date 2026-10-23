@@ -31,6 +31,7 @@ import { abortIfNeeded, hashReadable } from "./ArtifactHash.js";
 import { readArtifactFileChunks } from "./readArtifactFileChunks.js";
 import { ArtifactResourceScope } from "./ArtifactResourceScope.js";
 import { artifactIntegrityDetails } from "../domain/artifactIntegrity.js";
+import { readPyInstallerBytes } from "./pyinstaller/PyInstallerBytes.js";
 import { PyInstallerPyzStore } from "./pyinstaller/PyInstallerPyzStore.js";
 import { pyInstallerMemberStream } from "./pyinstaller/PyInstallerMemberStream.js";
 import {
@@ -314,12 +315,20 @@ export class PyInstallerArtifactReader implements ArtifactReader {
       [...images.values()].map((image) => image.archive),
     );
     const encrypted = hasEncryptionMarker(toc);
+    const carrier = await readPyInstallerBytes(handle, {
+      position: 0,
+      length: 2,
+      label: "PyInstaller carrier magic",
+      signal,
+    });
+    if (!carrier.ok) throw failure(carrier.error);
     const members = await this.#project(
       toc,
       cookie,
       images,
       magic,
       encrypted,
+      !carrier.value.equals(Buffer.from("MZ")),
       signal,
     );
     for (const member of members)
@@ -478,6 +487,7 @@ export class PyInstallerArtifactReader implements ArtifactReader {
     images: ReadonlyMap<CArchiveEntry, PyzImage>,
     magic: Buffer | undefined,
     encrypted: boolean,
+    posixCarrier: boolean,
     signal: AbortSignal | undefined,
   ): Promise<PyInstallerMember[]> {
     const members: PyInstallerMember[] = [];
@@ -503,7 +513,9 @@ export class PyInstallerArtifactReader implements ArtifactReader {
       abortIfNeeded(signal);
       const image = entry.typeCode === "z" ? images.get(entry) : undefined;
       if (image === undefined) {
-        append(projectStoredMember(entry, cookie.archiveStart, magic));
+        append(
+          projectStoredMember(entry, cookie.archiveStart, magic, posixCarrier),
+        );
         continue;
       }
       append(projectPyzContainer(entry, cookie.archiveStart, image, encrypted));

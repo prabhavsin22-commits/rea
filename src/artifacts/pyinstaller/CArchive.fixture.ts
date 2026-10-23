@@ -36,6 +36,7 @@ export const cArchiveExecutable = (input: {
   readonly members: readonly CArchiveFixtureMember[];
   readonly trailer?: Buffer;
   readonly tocBytes?: Buffer;
+  readonly carrier?: Buffer;
 }): Buffer => {
   const payloads: Buffer[] = [];
   const entries: Buffer[] = [];
@@ -70,7 +71,7 @@ export const cArchiveExecutable = (input: {
     tocLength: toc.length,
   });
   return Buffer.concat([
-    ELF_PREFIX,
+    input.carrier ?? ELF_PREFIX,
     ...payloads,
     toc,
     cookie,
