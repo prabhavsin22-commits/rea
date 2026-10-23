@@ -19,6 +19,7 @@ import {
   type AnalysisViewResult,
 } from "./analysisView.js";
 import { EnvironmentStateAccumulator } from "./EnvironmentStateAccumulator.js";
+import type { ObservedEntity } from "./environmentStateMerge.js";
 import {
   at,
   identityCandidates,
@@ -26,6 +27,12 @@ import {
   type JsonObject,
 } from "./environmentStateRules.js";
 import { environmentStateFields } from "./environmentStateView.js";
+import {
+  lineShapes,
+  replayKeys,
+  variantLines,
+} from "./environmentStateVariants.js";
+import { rewriteCuts } from "./environmentStateRewrites.js";
 
 type State = Extract<AnalysisViewResult, { kind: "environment-state" }>;
 const ALL_RULES = [
@@ -208,7 +215,7 @@ it("keeps the latest value of a field that changed with no related write and nam
   );
 });
 
-it("leaves a type recorded when a value changed across a write under another root", () => {
+it("ends a type's state at a write under another root its value changed across", () => {
   const state = stateOf(
     captureOf([
       ["GET", "/api/search", [{ id: 1, title: "Granite Ledger" }]],
@@ -216,16 +223,16 @@ it("leaves a type recorded when a value changed across a write under another roo
       ["GET", "/api/search", [{ id: 1, title: "Saltmarsh Depot" }]],
     ]),
   );
-  expect(state.types).toEqual([]);
-  expect(state.entities).toEqual([]);
-  expect(viewOf(state, "get_search")).toEqual({
-    tool: "get_search",
-    shape: "recorded",
-    reason: "fields-differ",
-  });
+  expect(state.types).toMatchObject([
+    { collection_template: "/api/search", init_before_ordinal: 1 },
+  ]);
+  expect(state.entities).toMatchObject([
+    { id: "1", fields: { title: "Granite Ledger" } },
+  ]);
+  expect(viewOf(state, "get_search")).toMatchObject({ shape: "list" });
 });
 
-it("leaves a type recorded when a value changed across a write already in flight", () => {
+it("leaves out of a type's state a read made while the write its value changed across was in flight", () => {
   const exchange = ([method, path, seconds, time, title]: readonly [
     string,
     string,
@@ -266,7 +273,7 @@ it("leaves a type recorded when a value changed across a write already in flight
   expect(viewOf(state, "get_search")).toEqual({
     tool: "get_search",
     shape: "recorded",
-    reason: "fields-differ",
+    reason: "no-init-recording",
   });
 });
 
@@ -768,6 +775,265 @@ it("refuses when extraction would exceed the projection budget", () => {
   });
 });
 
+it("counts the line shapes it builds against the budget as it builds them", () => {
+  const members = Object.fromEntries(
+    Array.from({ length: 40 }, (_, index) => [
+      `member_with_a_long_name_${String(index)}`,
+      index,
+    ]),
+  );
+  const entities: ObservedEntity[] = Array.from({ length: 50 }, (_, id) => ({
+    type: "/api/items",
+    collection: "/api/items",
+    id: String(id),
+    order: [0, id],
+    observations: [1, 2].map((ordinal) => ({
+      position: ordinal,
+      index: id,
+      ordinal,
+      tool: "get_items",
+      item: false,
+      object: members,
+    })),
+  }));
+  let retained = 0;
+  lineShapes(entities, (bytes) => {
+    retained += bytes;
+  });
+  // Each of the hundred observations keeps its entity's key and the names of its members.
+  expect(retained).toBeGreaterThan(100 * Object.keys(members).join(",").length);
+});
+
+it("leaves every line checked rather than compare more lines than the variant pass allows", () => {
+  const lines = Array.from({ length: 3000 }, (_, ordinal) => ({
+    ordinal,
+    method: "GET",
+    path: "/api/items",
+    query: `?view=${String(ordinal)}`,
+    status: 200,
+    start: ordinal,
+    end: ordinal,
+  }));
+  const shape = {
+    entities: new Map(
+      Array.from({ length: 4 }, (_, id) => [String(id), "id,name"]),
+    ),
+    carried: new Set(["id", "name"]),
+    common: new Set(["id", "name"]),
+  };
+  let looked = 0;
+  expect(
+    variantLines(lines, () => {
+      looked += 1;
+      return shape;
+    }),
+  ).toEqual([]);
+  // Comparing every pair would look each line's shape up thousands of times.
+  expect(looked).toBeLessThan(10 * lines.length);
+});
+
+it("tells apart member names that hold the separator, so a line spelling them otherwise is a variant", () => {
+  const line = (ordinal: number, query: string) => ({
+    ordinal,
+    method: "GET",
+    path: "/api/items/1",
+    query,
+    status: 200,
+    start: ordinal,
+    end: ordinal,
+  });
+  const observed = (ordinal: number, object: JsonObject) => ({
+    position: ordinal,
+    index: 0,
+    ordinal,
+    tool: "get_items_by_id",
+    item: true,
+    object,
+  });
+  const shapes = lineShapes(
+    [
+      {
+        type: "/api/items",
+        collection: "/api/items",
+        id: "1",
+        order: [1, 0],
+        observations: [
+          observed(1, { id: 1, a: 1, b: 2 }),
+          observed(2, { id: 1, "a,b": 3 }),
+        ],
+      },
+    ],
+    () => undefined,
+  );
+  expect(
+    variantLines([line(1, "?view=x"), line(2, "?view=y")], (record) =>
+      shapes.get(record.ordinal),
+    ),
+  ).toHaveLength(1);
+});
+
+it("leaves every line checked when comparing many mostly empty lines would exceed the variant pass's work", () => {
+  let reads = 0;
+  const lines = Array.from({ length: 4200 }, (_, ordinal) => {
+    const record = {
+      ordinal,
+      method: "GET",
+      path: "/api/items",
+      status: 200,
+      start: ordinal,
+      end: ordinal,
+    };
+    return Object.defineProperty(record, "query", {
+      enumerable: true,
+      get: () => {
+        reads += 1;
+        return `?page=${String(ordinal)}`;
+      },
+    }) as typeof record & { readonly query: string };
+  });
+  const empty = {
+    entities: new Map(),
+    carried: new Set<string>(),
+    common: undefined,
+  };
+  const shown = {
+    entities: new Map([
+      ["1", "id"],
+      ["2", "id"],
+    ]),
+    carried: new Set(["id"]),
+    common: new Set(["id"]),
+  };
+  expect(
+    variantLines(lines, (record) => (record.ordinal === 0 ? shown : empty)),
+  ).toEqual([]);
+  // Comparing every pair would read each line's query thousands of times.
+  expect(reads).toBeLessThan(10 * lines.length);
+});
+
+/** The smallest allowance, to a KiB, a capture's state projects within. */
+const allowance = (parent: AnalysisViewParent): number => {
+  const fits = (bytes: number): boolean =>
+    projectAnalysisView(
+      parent,
+      { kind: "environment-state", template_rules: [...ALL_RULES] },
+      { state: new EnvironmentStateAccumulator(bytes, [...ALL_RULES]) },
+    ).ok;
+  let [low, high] = [0, 8 * 1024];
+  while (high - low > 1) {
+    const middle = Math.floor((low + high) / 2);
+    if (fits(middle * 1024)) high = middle;
+    else low = middle;
+  }
+  return high * 1024;
+};
+
+it("counts each change of a line's membership across a write against the budget", () => {
+  const tags = 64;
+  // Each tag's list is read three times across two writes; the third read shows the first book again or keeps the second.
+  const capture = (third: number) =>
+    captureOf([
+      ...Array.from({ length: tags }, (_, tag): TimedCaptureRow => [
+        "GET",
+        `/api/books?tag=${String(tag)}`,
+        [{ id: 1 }],
+      ]),
+      ["POST", "/api/view-log", { ok: true }, 200, { tag: 0 }],
+      ...Array.from({ length: tags }, (_, tag): TimedCaptureRow => [
+        "GET",
+        `/api/books?tag=${String(tag)}`,
+        [{ id: 2 }],
+      ]),
+      ["POST", "/api/view-log", { ok: true }, 200, { tag: 1 }],
+      ...Array.from({ length: tags }, (_, tag): TimedCaptureRow => [
+        "GET",
+        `/api/books?tag=${String(tag)}`,
+        [{ id: third }],
+      ]),
+    ]);
+  // Both captures keep the same entities and observations; only the second change of each line differs.
+  expect(allowance(capture(1)) - allowance(capture(2))).toBeGreaterThanOrEqual(
+    tags * 256,
+  );
+});
+
+it("counts each replay key it keeps against the budget", () => {
+  let retained = 0;
+  const names = Array.from(
+    { length: 500 },
+    (_, index) => `view_${String(index)}`,
+  );
+  const keys = replayKeys(
+    ["?view=plain"],
+    [`?${names.map((name) => `${name}=1`).join("&")}`],
+    (bytes) => {
+      retained += bytes;
+    },
+  );
+  expect(keys.length).toBeGreaterThan(names.length);
+  expect(retained).toBeGreaterThanOrEqual(keys.length * 128);
+});
+
+it("finds each span's earliest write without scanning the writes before it", () => {
+  let reads = 0;
+  const timed = (ordinal: number, start: number, end: number) => {
+    const record = {
+      ordinal,
+      method: "POST",
+      path: "/api/log",
+      query: undefined,
+      status: 200,
+    };
+    return Object.defineProperties(record, {
+      start: { enumerable: true, get: () => ((reads += 1), start) },
+      end: { enumerable: true, get: () => ((reads += 1), end) },
+    }) as typeof record & { readonly start: number; readonly end: number };
+  };
+  const count = 2000;
+  const writes = Array.from({ length: count }, (_, index) =>
+    timed(index, index * 10, index * 10 + 1),
+  );
+  const reads_ = new Map(
+    Array.from({ length: count }, (_, index) => {
+      const ordinal = count + index;
+      return [
+        ordinal,
+        timed(ordinal, index * 10 + 5, index * 10 + 12),
+      ] as const;
+    }),
+  );
+  const spans = [...reads_.keys()].map((earlier, index) => ({
+    type: `/api/type_${String(index)}`,
+    earlier,
+    later: earlier,
+  }));
+  reads = 0;
+  const cuts = rewriteCuts(spans, writes, reads_);
+  expect(cuts.size).toBe(count - 1);
+  expect(reads).toBeLessThan(200 * count);
+});
+
+it("releases a planning pass a rewrite cut discards before extracting the state again", () => {
+  const recipe = (id: number, views: number) => ({
+    id,
+    name: `Recipe ${String(id)} simmered slowly with a long descriptive title`,
+    views,
+  });
+  const shelf = Array.from({ length: 400 }, (_, index) => recipe(index + 1, 1));
+  // Logging a view bumps the counter only when `views` changes, which cuts the type's reads at the log.
+  const capture = (views: number) =>
+    captureOf([
+      ["GET", "/api/recipes", shelf],
+      ["GET", "/api/recipes/1", recipe(1, 1)],
+      ["POST", "/api/view-log", { ok: true }, 200, { recipe: 1 }],
+      ["GET", "/api/recipes/1", recipe(1, views)],
+    ]);
+  expect(stateOf(capture(2)).types).toMatchObject([
+    { collection_template: "/api/recipes", init_before_ordinal: 2 },
+  ]);
+  expect(allowance(capture(2))).toBeLessThan(allowance(capture(1)) + 16 * 1024);
+});
+
 it("ends every type's state at a write whose URL was redacted, and says so", () => {
   const parent = captureOf([
     ["GET", "/api/items/1", { id: 1, title: "Granite Ledger" }],
@@ -851,7 +1117,7 @@ it("does not take a later recording that is itself an entity as the list", () =>
   expect(state.entities).toEqual([]);
 });
 
-it("leaves a type recorded when two of its tools read different values across a write", () => {
+it("ends a type's state at a write two of its tools read different values across", () => {
   const state = stateOf(
     captureOf([
       ["GET", "/api/search", [{ id: 1, title: "Granite Ledger" }]],
@@ -859,16 +1125,17 @@ it("leaves a type recorded when two of its tools read different values across a 
       ["GET", "/api/search/1", { id: 1, title: "Saltmarsh Depot" }],
     ]),
   );
-  expect(state.types).toEqual([]);
-  expect(state.entities).toEqual([]);
+  expect(state.types).toMatchObject([
+    { collection_template: "/api/search", init_before_ordinal: 1 },
+  ]);
+  expect(state.entities).toMatchObject([
+    { id: "1", fields: { title: "Granite Ledger" } },
+  ]);
   expect(
     state.views.map((view) =>
       view.shape === "recorded" ? [view.tool, view.reason] : view.tool,
     ),
-  ).toEqual([
-    ["get_search", "fields-differ"],
-    ["get_search_by_id", "fields-differ"],
-  ]);
+  ).toEqual(["get_search", ["get_search_by_id", "no-init-recording"]]);
 });
 
 it.each(["old", "new"])(
@@ -883,14 +1150,9 @@ it.each(["old", "new"])(
       ]),
     );
     if (title === "new") {
-      expect(state.types).toEqual([]);
-      expect(state.entities).toEqual([]);
-      expect(
-        state.views.every(
-          (view) =>
-            view.shape === "recorded" && view.reason === "fields-differ",
-        ),
-      ).toBe(true);
+      expect(state.types).toMatchObject([{ init_before_ordinal: 1 }]);
+      expect(state.entities[0]?.fields.title).toBe("old");
+      expect(viewOf(state, "get_search")).toMatchObject({ shape: "list" });
     } else {
       expect(viewOf(state, "get_search_by_id")).toMatchObject({
         shape: "item",
@@ -990,7 +1252,7 @@ it.each([
   [[{ id: 1 }], []],
   [[{ id: 1 }], [{ id: 2 }]],
 ] as const)(
-  "keeps changed list membership across another root's write recorded (%j -> %j)",
+  "ends a list's state at another root's write its membership changed across (%j -> %j)",
   (before, after) => {
     const state = stateOf(
       captureOf([
@@ -999,12 +1261,15 @@ it.each([
         ["GET", "/api/search", [...after]],
       ]),
     );
-    expect(state.types).toEqual([]);
-    expect(state.entities).toEqual([]);
-    expect(viewOf(state, "get_search")).toEqual({
-      tool: "get_search",
-      shape: "recorded",
-      reason: "fields-differ",
+    // An empty initial list proves no identity, so it is held as a document.
+    expect(state.types.map((type) => type.init_before_ordinal)).toEqual(
+      before.length > 0 ? [1] : [],
+    );
+    expect(state.entities.map((entity) => entity.id)).toEqual(
+      before.map((item) => String(item.id)),
+    );
+    expect(viewOf(state, "get_search")).toMatchObject({
+      shape: before.length > 0 ? "list" : "document",
     });
   },
 );
@@ -1126,7 +1391,7 @@ it.each([
   [{ id: 1 }, { id: 1, title: "Created" }],
   [{ id: 1, title: "Original" }, { id: 1 }],
 ])(
-  "keeps fields added or removed across another root's write recorded (%j -> %j)",
+  "ends a type's state at another root's write it gained or lost fields across (%j -> %j)",
   (before, after) => {
     const state = stateOf(
       captureOf([
@@ -1135,11 +1400,10 @@ it.each([
         ["GET", "/api/search/1", after],
       ]),
     );
-    expect(state.types).toEqual([]);
-    expect(state.entities).toEqual([]);
+    expect(state.types).toMatchObject([{ init_before_ordinal: 1 }]);
+    expect(state.entities).toMatchObject([{ fields: before }]);
     expect(viewOf(state, "get_search_by_id")).toMatchObject({
-      shape: "recorded",
-      reason: "fields-differ",
+      shape: "item",
     });
   },
 );
