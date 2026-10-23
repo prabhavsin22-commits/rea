@@ -1,0 +1,2404 @@
+{
+  "tiktoken": "0.12.0",
+  "encoding": "cl100k_base",
+  "actual_model_usage": null,
+  "cohort": {
+    "host": {
+      "system": "Linux",
+      "node": "instance-20260526-guiflow",
+      "release": "6.1.0-54-cloud-amd64",
+      "version": "#1 SMP PREEMPT_DYNAMIC Debian 6.1.190-1 (2026-10-16)",
+      "machine": "x86_64",
+      "processor": ""
+    },
+    "driver_source_revision": "fd23b89b0b1727b483050025e7af344145c1fd91",
+    "driver_files": {
+      "experiments/analysis-efficiency/native-export-views.mjs": "a276675173982d9a34cc2bafe706e5689a7a148d73eac9f3f8dc49da88381aa8",
+      "experiments/analysis-efficiency/native-export-oracle.py": "b91ba16231375a8cd5f5c0c7b3e954cac107fdf46b84165a835281d96743b826",
+      "experiments/analysis-efficiency/retained-query-calls.mjs": "6cef1ceda424622d6a9654e388ff22d246eeb6f9d7b182b2122a83a2378fdaf7",
+      "experiments/analysis-efficiency/retained-query-finalization.mjs": "901092ae6dc7fda1a8869d62362a0a9f560e03d5ef5667a5c6ed660db000b9a2",
+      "experiments/analysis-efficiency/resource-run.py": "7a9642ab86ba34290564f636eb080cacf38b4185a254028680b238bff172993b",
+      "experiments/analysis-efficiency/resource_payload.py": "6f089e645459eba80c5d73e39c21606c78173a44daf49fabc3b88c4631ce51c6"
+    },
+    "packages": "libc6:amd64 2.36-9+deb12u14 amd64\nlibllvm14:amd64 1:14.0.6-12 amd64\n",
+    "toolchain_wrapper_sha256": "8f7677ee09e15468c7379a5fb7333316111e6593194817c13e90ef7569ac9b27",
+    "receipts": "final-cohort/index.json",
+    "resource_policy": {
+      "cpu": 1,
+      "early_stop_bytes": 3221225472,
+      "hard_bytes": 4294967296,
+      "swap": 0,
+      "cpu_quota_percent": 100,
+      "payload_affinity": "0-1",
+      "observer_initial_affinity": "15",
+      "affinity_evidence": "live-affinity-observation.json plus immutable run-task.sh taskset command; CPU quota verified as1s/second. Guard affinity field describes initial placement."
+    },
+    "sources": "No ambient environment snapshot persisted."
+  },
+  "commands": [
+    {
+      "name": "libc-1-complete",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-libc-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-1-complete",
+        "--lane",
+        "complete",
+        "--buffer",
+        "10485760"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+      "utc_completed": "2026-10-23T19:37:09.565278+00:00"
+    },
+    {
+      "name": "libc-1-selected",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-libc-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-1-selected",
+        "--lane",
+        "selected",
+        "--buffer",
+        "10485760"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+      "utc_completed": "2026-10-23T19:37:27.266122+00:00"
+    },
+    {
+      "name": "llvm-1-complete",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-llvm-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-1-complete",
+        "--lane",
+        "complete",
+        "--buffer",
+        "67108864"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+      "utc_completed": "2026-10-23T19:38:57.180513+00:00"
+    },
+    {
+      "name": "llvm-1-selected",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-llvm-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-1-selected",
+        "--lane",
+        "selected",
+        "--buffer",
+        "67108864"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+      "utc_completed": "2026-10-23T19:39:18.713872+00:00"
+    },
+    {
+      "name": "libc-2-selected",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-libc-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-2-selected",
+        "--lane",
+        "selected",
+        "--buffer",
+        "10485760"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+      "utc_completed": "2026-10-23T19:39:36.005815+00:00"
+    },
+    {
+      "name": "libc-2-complete",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-libc-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-2-complete",
+        "--lane",
+        "complete",
+        "--buffer",
+        "10485760"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+      "utc_completed": "2026-10-23T19:39:51.788911+00:00"
+    },
+    {
+      "name": "llvm-2-selected",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-llvm-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-2-selected",
+        "--lane",
+        "selected",
+        "--buffer",
+        "67108864"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+      "utc_completed": "2026-10-23T19:40:15.730726+00:00"
+    },
+    {
+      "name": "llvm-2-complete",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-llvm-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-2-complete",
+        "--lane",
+        "complete",
+        "--buffer",
+        "67108864"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+      "utc_completed": "2026-10-23T19:42:49.650977+00:00"
+    },
+    {
+      "name": "libc-3-complete",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-libc-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-3-complete",
+        "--lane",
+        "complete",
+        "--buffer",
+        "10485760"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+      "utc_completed": "2026-10-23T19:43:22.332184+00:00"
+    },
+    {
+      "name": "libc-3-selected",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-libc-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-3-selected",
+        "--lane",
+        "selected",
+        "--buffer",
+        "10485760"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+      "utc_completed": "2026-10-23T19:43:42.700664+00:00"
+    },
+    {
+      "name": "llvm-3-complete",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-llvm-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-3-complete",
+        "--lane",
+        "complete",
+        "--buffer",
+        "67108864"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/baseline-main-9fd78a74f",
+      "utc_completed": "2026-10-23T19:45:10.593277+00:00"
+    },
+    {
+      "name": "llvm-3-selected",
+      "exit": 0,
+      "status": "passed",
+      "command": [
+        "python3",
+        "experiments/analysis-efficiency/resource-run.py",
+        "--observe-payload-exit",
+        "--",
+        "/tmp/rea-perf-native-exports-20261023/run-task.sh",
+        "node",
+        "experiments/analysis-efficiency/native-export-views.mjs",
+        "--runtime",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+        "--identity",
+        "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0/runtime-identity.json",
+        "--oracle",
+        "/tmp/rea-perf-native-exports-20261023/oracle-llvm-final.json",
+        "--output",
+        "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-3-selected",
+        "--lane",
+        "selected",
+        "--buffer",
+        "67108864"
+      ],
+      "runtime": "/tmp/rea-perf-native-exports-20261023/candidate-fd23b89b0",
+      "utc_completed": "2026-10-23T19:45:31.111375+00:00"
+    }
+  ],
+  "runtime_identities": {
+    "2351776ec934386f246a8ecfb0b46e5163f1f8724d1653261741d9cc9beecf0d": {
+      "source_revision": "9fd78a74f84a8e924bd58e7deaf5934bfb24f53c",
+      "compiled_files": 2167,
+      "entrypoints": 2
+    },
+    "70987d2a0148a01c8fa95bf0c4cc0b0580cf44a110585eb0b70e7b9877867288": {
+      "source_revision": "fd23b89b0b1727b483050025e7af344145c1fd91",
+      "compiled_files": 2168,
+      "entrypoints": 2
+    }
+  },
+  "projection": "Scripted SDK tasks, not an actual model run. The estimate includes a fixed task description, every discovered tool name/description/input schema once, every tool argument and text reply, including Evidence export. Complete raw SDK directory token costs and a three-tool-only alternative are reported separately; output schemas are not included in the primary model-context projection. Host injection, history replay, inference quality and billable usage are unmeasured.",
+  "resources": "CPU quota 100%; launcher binds clients/servers to CPUs 0-1 (the outer observer starts on CPU15). The guard receipt affinity is initial placement, not child affinity; a live cohort observation records the override. 3 GiB early stop/4 GiB hard/no swap. Fresh client/server/HOME per task, Node compile cache disabled, OS caches unflushed. Later retained pages are warm queries; no separate warm-server cohort. Whole-family costs include client/oracle comparisons, source hashing, runtime binding, serialization and receipts. Tokenizer processing itself is outside these measured tasks. Verified counters are at payload exit while the observer remains alive; unavailable final whole-scope counters remain null.",
+  "summary": {
+    "436887791de0478d72c8323be99df69d6d0cf82745e5abec79d5e0374f4df560": {
+      "complete": {
+        "wall_seconds": {
+          "median": 89.863,
+          "minimum": 87.839,
+          "maximum": 153.857
+        },
+        "cpu_seconds": {
+          "median": 85.855826,
+          "minimum": 84.154022,
+          "maximum": 151.772905
+        },
+        "kernel_family_peak_bytes": {
+          "median": 1961029632,
+          "minimum": 1882451968,
+          "maximum": 2021089280
+        },
+        "projected_tokens": {
+          "median": 4355448,
+          "minimum": 4355448,
+          "maximum": 4355448
+        },
+        "mcp_call_count": {
+          "median": 2,
+          "minimum": 2,
+          "maximum": 2
+        },
+        "mcp_reply_bytes": {
+          "median": 28986221,
+          "minimum": 28986221,
+          "maximum": 28986221
+        }
+      },
+      "selected": {
+        "wall_seconds": {
+          "median": 21.477,
+          "minimum": 20.463,
+          "maximum": 23.885
+        },
+        "cpu_seconds": {
+          "median": 19.609856,
+          "minimum": 19.483085,
+          "maximum": 20.137611
+        },
+        "kernel_family_peak_bytes": {
+          "median": 1327632384,
+          "minimum": 1300123648,
+          "maximum": 1360908288
+        },
+        "projected_tokens": {
+          "median": 57346,
+          "minimum": 57346,
+          "maximum": 57346
+        },
+        "mcp_call_count": {
+          "median": 4,
+          "minimum": 4,
+          "maximum": 4
+        },
+        "mcp_reply_bytes": {
+          "median": 19689,
+          "minimum": 19689,
+          "maximum": 19689
+        }
+      }
+    },
+    "6b4a45352fd0c540a9c7c718f35ce8c8e46a4e482f9d3885a910c32d1a0e1421": {
+      "complete": {
+        "wall_seconds": {
+          "median": 16.132,
+          "minimum": 15.726,
+          "maximum": 32.588
+        },
+        "cpu_seconds": {
+          "median": 15.564058,
+          "minimum": 15.331708,
+          "maximum": 28.761126
+        },
+        "kernel_family_peak_bytes": {
+          "median": 1057775616,
+          "minimum": 1018601472,
+          "maximum": 1062612992
+        },
+        "projected_tokens": {
+          "median": 289912,
+          "minimum": 289912,
+          "maximum": 289912
+        },
+        "mcp_call_count": {
+          "median": 2,
+          "minimum": 2,
+          "maximum": 2
+        },
+        "mcp_reply_bytes": {
+          "median": 1653409,
+          "minimum": 1653409,
+          "maximum": 1653409
+        }
+      },
+      "selected": {
+        "wall_seconds": {
+          "median": 17.646,
+          "minimum": 17.239,
+          "maximum": 20.287
+        },
+        "cpu_seconds": {
+          "median": 16.108224,
+          "minimum": 15.86627,
+          "maximum": 19.898575
+        },
+        "kernel_family_peak_bytes": {
+          "median": 984051712,
+          "minimum": 983904256,
+          "maximum": 996356096
+        },
+        "projected_tokens": {
+          "median": 58253,
+          "minimum": 58253,
+          "maximum": 58253
+        },
+        "mcp_call_count": {
+          "median": 5,
+          "minimum": 5,
+          "maximum": 5
+        },
+        "mcp_reply_bytes": {
+          "median": 25946,
+          "minimum": 25946,
+          "maximum": 25946
+        }
+      }
+    }
+  },
+  "recordings": [
+    {
+      "case": "libc-1-complete",
+      "lane": "complete",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "sha256": "6b4a45352fd0c540a9c7c718f35ce8c8e46a4e482f9d3885a910c32d1a0e1421",
+        "bytes": 1926232
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "malloc",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x98930",
+            "size": "791",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 1725
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xa2d70",
+            "size": "40",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": true
+            },
+            "source_index": 2706
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x9be70",
+            "size": "265",
+            "type": "ifunc",
+            "binding": "global",
+            "version": {
+              "index": 18,
+              "name": "GLIBC_2.14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 2708
+          }
+        ],
+        "export_count": 3025,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 3043,
+          "exports": 3025,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1",
+      "source_report_sha256": "ebaa195fb88b9f55fd106d8626086423c65c9ef6215be1ba99c36994aa56a74f",
+      "runtime_identity_sha256": "2351776ec934386f246a8ecfb0b46e5163f1f8724d1653261741d9cc9beecf0d",
+      "catalog_sha256": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+      "catalog_tools": 220,
+      "buffer_bytes": 10485760,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libc.so.6"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 13575.356001,
+          "reply_bytes": 1653053,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-1-complete/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 53.834508999998434,
+          "reply_bytes": 356,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 430.447168,
+        "discovery_ms": 844.6674159999999,
+        "bundle_verification_ms": 12.558220000000802,
+        "runtime_validation_after_ms": 439.2636079999993
+      },
+      "wall_seconds": 16.132,
+      "cpu_seconds": 15.564058,
+      "kernel_family_peak_bytes": 1057775616,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 74,
+        "input_catalog_once": 53989,
+        "arguments": 62,
+        "text_replies": 235787,
+        "combined": 289912,
+        "only_three_task_tools": 238857,
+        "complete_transport_catalog": 812145
+      },
+      "receipt_sha256": {
+        "report.json": "0c0756e812df11af10e2b6a7e5caa4c3df4169d2c980ddec29b01352c7e84a20",
+        "catalog.json": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+        "transcript.json": "60abddf53ef22afd04b8d91020dfc9386c3235ee661336c3855a46c0e08455b4",
+        "evidence.json": "196599a16cb367d07d66815d35d5c80ec1d1bf63ccd3e0da82dc88d87424fc7e",
+        "libc-1-complete.log": "abc756b65d18876127500293c55619a8892ae6848721e6a994bae3b31622a512"
+      }
+    },
+    {
+      "case": "libc-1-selected",
+      "lane": "selected",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "sha256": "6b4a45352fd0c540a9c7c718f35ce8c8e46a4e482f9d3885a910c32d1a0e1421",
+        "bytes": 1926232
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "malloc",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x98930",
+            "size": "791",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 1725
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xa2d70",
+            "size": "40",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": true
+            },
+            "source_index": 2706
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x9be70",
+            "size": "265",
+            "type": "ifunc",
+            "binding": "global",
+            "version": {
+              "index": 18,
+              "name": "GLIBC_2.14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 2708
+          }
+        ],
+        "export_count": 3025,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 3043,
+          "exports": 3025,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1",
+      "source_report_sha256": "ebaa195fb88b9f55fd106d8626086423c65c9ef6215be1ba99c36994aa56a74f",
+      "runtime_identity_sha256": "70987d2a0148a01c8fa95bf0c4cc0b0580cf44a110585eb0b70e7b9877867288",
+      "catalog_sha256": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+      "catalog_tools": 220,
+      "buffer_bytes": 10485760,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+            "detail": "summary"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 14491.693675999999,
+          "reply_bytes": 5703,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["malloc", "memcpy"],
+              "offset": 0,
+              "limit": 2
+            }
+          },
+          "phase": "page",
+          "elapsed_ms": 245.75956300000144,
+          "reply_bytes": 7183,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["malloc", "memcpy"],
+              "offset": 2,
+              "limit": 2
+            }
+          },
+          "phase": "page",
+          "elapsed_ms": 13.030819999999949,
+          "reply_bytes": 6609,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["__rea_export_oracle_missing__"],
+              "limit": 1
+            }
+          },
+          "phase": "negative",
+          "elapsed_ms": 8.844030000000203,
+          "reply_bytes": 6095,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-1-selected/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 61.13522799999919,
+          "reply_bytes": 356,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 534.967136,
+        "discovery_ms": 931.770834,
+        "bundle_verification_ms": 11.906159999998636,
+        "runtime_validation_after_ms": 521.2601750000031
+      },
+      "wall_seconds": 17.646,
+      "cpu_seconds": 15.86627,
+      "kernel_family_peak_bytes": 996356096,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 74,
+        "input_catalog_once": 54128,
+        "arguments": 315,
+        "text_replies": 3736,
+        "combined": 58253,
+        "only_three_task_tools": 7198,
+        "complete_transport_catalog": 815054
+      },
+      "receipt_sha256": {
+        "report.json": "41672d8492aa7e6ced302a99ab2f92b51a3c34211fd5f0c66aca7111e844fd4f",
+        "catalog.json": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+        "transcript.json": "6ab39da362a2417b41b137fad42bb60d692cd56a305b493ad7a4658bdc9bfa53",
+        "evidence.json": "f2cbd753ad8f988041404bce9802bae10e2192711fcdd44dce33066a79a57284",
+        "libc-1-selected.log": "e881eb8b8483a3e818e6c599b3ff412e8a66f2a19b0e393eb87107ddfee41095"
+      }
+    },
+    {
+      "case": "libc-2-complete",
+      "lane": "complete",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "sha256": "6b4a45352fd0c540a9c7c718f35ce8c8e46a4e482f9d3885a910c32d1a0e1421",
+        "bytes": 1926232
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "malloc",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x98930",
+            "size": "791",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 1725
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xa2d70",
+            "size": "40",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": true
+            },
+            "source_index": 2706
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x9be70",
+            "size": "265",
+            "type": "ifunc",
+            "binding": "global",
+            "version": {
+              "index": 18,
+              "name": "GLIBC_2.14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 2708
+          }
+        ],
+        "export_count": 3025,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 3043,
+          "exports": 3025,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1",
+      "source_report_sha256": "ebaa195fb88b9f55fd106d8626086423c65c9ef6215be1ba99c36994aa56a74f",
+      "runtime_identity_sha256": "2351776ec934386f246a8ecfb0b46e5163f1f8724d1653261741d9cc9beecf0d",
+      "catalog_sha256": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+      "catalog_tools": 220,
+      "buffer_bytes": 10485760,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libc.so.6"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 13144.700785,
+          "reply_bytes": 1653053,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-2-complete/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 63.92713800000092,
+          "reply_bytes": 356,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 354.93479,
+        "discovery_ms": 974.570933,
+        "bundle_verification_ms": 22.570060000000012,
+        "runtime_validation_after_ms": 315.25630100000126
+      },
+      "wall_seconds": 15.726,
+      "cpu_seconds": 15.331708,
+      "kernel_family_peak_bytes": 1062612992,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 74,
+        "input_catalog_once": 53989,
+        "arguments": 62,
+        "text_replies": 235787,
+        "combined": 289912,
+        "only_three_task_tools": 238857,
+        "complete_transport_catalog": 812145
+      },
+      "receipt_sha256": {
+        "report.json": "f2f1bb7225ace85f6b71a002f16b9c339e0f5af057ebdccb5a597de49726b8cf",
+        "catalog.json": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+        "transcript.json": "76cc13fe28729ba00760f82f16595abffb558ccd13caae2607697a1b646dfef9",
+        "evidence.json": "196599a16cb367d07d66815d35d5c80ec1d1bf63ccd3e0da82dc88d87424fc7e",
+        "libc-2-complete.log": "d4c659429d8dc797a9ab25fdd8d031f7d975ba152d75d34282a05203dec8d518"
+      }
+    },
+    {
+      "case": "libc-2-selected",
+      "lane": "selected",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "sha256": "6b4a45352fd0c540a9c7c718f35ce8c8e46a4e482f9d3885a910c32d1a0e1421",
+        "bytes": 1926232
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "malloc",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x98930",
+            "size": "791",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 1725
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xa2d70",
+            "size": "40",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": true
+            },
+            "source_index": 2706
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x9be70",
+            "size": "265",
+            "type": "ifunc",
+            "binding": "global",
+            "version": {
+              "index": 18,
+              "name": "GLIBC_2.14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 2708
+          }
+        ],
+        "export_count": 3025,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 3043,
+          "exports": 3025,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1",
+      "source_report_sha256": "ebaa195fb88b9f55fd106d8626086423c65c9ef6215be1ba99c36994aa56a74f",
+      "runtime_identity_sha256": "70987d2a0148a01c8fa95bf0c4cc0b0580cf44a110585eb0b70e7b9877867288",
+      "catalog_sha256": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+      "catalog_tools": 220,
+      "buffer_bytes": 10485760,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+            "detail": "summary"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 14223.054124,
+          "reply_bytes": 5703,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["malloc", "memcpy"],
+              "offset": 0,
+              "limit": 2
+            }
+          },
+          "phase": "page",
+          "elapsed_ms": 244.41907300000094,
+          "reply_bytes": 7183,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["malloc", "memcpy"],
+              "offset": 2,
+              "limit": 2
+            }
+          },
+          "phase": "page",
+          "elapsed_ms": 15.94735000000037,
+          "reply_bytes": 6609,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["__rea_export_oracle_missing__"],
+              "limit": 1
+            }
+          },
+          "phase": "negative",
+          "elapsed_ms": 9.414429000000382,
+          "reply_bytes": 6095,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-2-selected/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 60.57770899999923,
+          "reply_bytes": 356,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 579.4045540000001,
+        "discovery_ms": 838.9029569999999,
+        "bundle_verification_ms": 11.952439000000595,
+        "runtime_validation_after_ms": 435.01611799999955
+      },
+      "wall_seconds": 17.239,
+      "cpu_seconds": 16.108224,
+      "kernel_family_peak_bytes": 984051712,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 74,
+        "input_catalog_once": 54128,
+        "arguments": 315,
+        "text_replies": 3736,
+        "combined": 58253,
+        "only_three_task_tools": 7198,
+        "complete_transport_catalog": 815054
+      },
+      "receipt_sha256": {
+        "report.json": "6f7feb8034d184467eb0a99999787dc472e58f77e15db0a3fc378c15d542aca7",
+        "catalog.json": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+        "transcript.json": "4af5f236210a33cc191c984d10253f8b2080d212147d33b8fe6bb7529dcc80ff",
+        "evidence.json": "f2cbd753ad8f988041404bce9802bae10e2192711fcdd44dce33066a79a57284",
+        "libc-2-selected.log": "b8b94904585d29b813db8891c3c2df4e3617485a0d36186709593b9d44b111cb"
+      }
+    },
+    {
+      "case": "libc-3-complete",
+      "lane": "complete",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "sha256": "6b4a45352fd0c540a9c7c718f35ce8c8e46a4e482f9d3885a910c32d1a0e1421",
+        "bytes": 1926232
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "malloc",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x98930",
+            "size": "791",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 1725
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xa2d70",
+            "size": "40",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": true
+            },
+            "source_index": 2706
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x9be70",
+            "size": "265",
+            "type": "ifunc",
+            "binding": "global",
+            "version": {
+              "index": 18,
+              "name": "GLIBC_2.14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 2708
+          }
+        ],
+        "export_count": 3025,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 3043,
+          "exports": 3025,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1",
+      "source_report_sha256": "ebaa195fb88b9f55fd106d8626086423c65c9ef6215be1ba99c36994aa56a74f",
+      "runtime_identity_sha256": "2351776ec934386f246a8ecfb0b46e5163f1f8724d1653261741d9cc9beecf0d",
+      "catalog_sha256": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+      "catalog_tools": 220,
+      "buffer_bytes": 10485760,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libc.so.6"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 27266.405603,
+          "reply_bytes": 1653053,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-3-complete/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 103.23801800000001,
+          "reply_bytes": 356,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 1243.4601859999998,
+        "discovery_ms": 1954.056255,
+        "bundle_verification_ms": 25.931749999999738,
+        "runtime_validation_after_ms": 753.6768489999995
+      },
+      "wall_seconds": 32.588,
+      "cpu_seconds": 28.761126,
+      "kernel_family_peak_bytes": 1018601472,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 74,
+        "input_catalog_once": 53989,
+        "arguments": 62,
+        "text_replies": 235787,
+        "combined": 289912,
+        "only_three_task_tools": 238857,
+        "complete_transport_catalog": 812145
+      },
+      "receipt_sha256": {
+        "report.json": "0d3075193dfcc3ba317afbd400eae1eeacd5ff9529c26b116e446507acf76930",
+        "catalog.json": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+        "transcript.json": "a1ef7b39d9e38e0327654753ae28009e638aa30cc44c301e9174c449344da20d",
+        "evidence.json": "196599a16cb367d07d66815d35d5c80ec1d1bf63ccd3e0da82dc88d87424fc7e",
+        "libc-3-complete.log": "c8fd61a4aa092b4bd428c86f797b7627f9178daf46b549a5c130e1a62dbf1306"
+      }
+    },
+    {
+      "case": "libc-3-selected",
+      "lane": "selected",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "sha256": "6b4a45352fd0c540a9c7c718f35ce8c8e46a4e482f9d3885a910c32d1a0e1421",
+        "bytes": 1926232
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "malloc",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x98930",
+            "size": "791",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 1725
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xa2d70",
+            "size": "40",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "GLIBC_2.2.5",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": true
+            },
+            "source_index": 2706
+          },
+          {
+            "name": "memcpy",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0x9be70",
+            "size": "265",
+            "type": "ifunc",
+            "binding": "global",
+            "version": {
+              "index": 18,
+              "name": "GLIBC_2.14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 2708
+          }
+        ],
+        "export_count": 3025,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 3043,
+          "exports": 3025,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1",
+      "source_report_sha256": "ebaa195fb88b9f55fd106d8626086423c65c9ef6215be1ba99c36994aa56a74f",
+      "runtime_identity_sha256": "70987d2a0148a01c8fa95bf0c4cc0b0580cf44a110585eb0b70e7b9877867288",
+      "catalog_sha256": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+      "catalog_tools": 220,
+      "buffer_bytes": 10485760,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+            "detail": "summary"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 16222.338358999998,
+          "reply_bytes": 5703,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["malloc", "memcpy"],
+              "offset": 0,
+              "limit": 2
+            }
+          },
+          "phase": "page",
+          "elapsed_ms": 338.0977899999998,
+          "reply_bytes": 7183,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["malloc", "memcpy"],
+              "offset": 2,
+              "limit": 2
+            }
+          },
+          "phase": "page",
+          "elapsed_ms": 9.646970000001602,
+          "reply_bytes": 6609,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_70188764243cac3f4935bade799c0c0ba1eb894eb33640543568d21797d18bb1"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["__rea_export_oracle_missing__"],
+              "limit": 1
+            }
+          },
+          "phase": "negative",
+          "elapsed_ms": 8.348309999997582,
+          "reply_bytes": 6095,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/libc-3-selected/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 51.11569899999813,
+          "reply_bytes": 356,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 748.5303889999999,
+        "discovery_ms": 1248.319706,
+        "bundle_verification_ms": 10.97722000000067,
+        "runtime_validation_after_ms": 633.1265830000011
+      },
+      "wall_seconds": 20.287,
+      "cpu_seconds": 19.898575,
+      "kernel_family_peak_bytes": 983904256,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 74,
+        "input_catalog_once": 54128,
+        "arguments": 315,
+        "text_replies": 3736,
+        "combined": 58253,
+        "only_three_task_tools": 7198,
+        "complete_transport_catalog": 815054
+      },
+      "receipt_sha256": {
+        "report.json": "1cc49ffbb175a5075f785bbf1c365586010e47cd0beb3c3482a096ba95b90f1b",
+        "catalog.json": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+        "transcript.json": "43c069cb74477869b751d5a0851368cb7aaa6be69e3e22b47a5095e39db04c05",
+        "evidence.json": "f2cbd753ad8f988041404bce9802bae10e2192711fcdd44dce33066a79a57284",
+        "libc-3-selected.log": "34b7515200049ecae33893ea1af7c8018ce7234e43fe7a72f40ce969ac80e43f"
+      }
+    },
+    {
+      "case": "llvm-1-complete",
+      "lane": "complete",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1",
+        "sha256": "436887791de0478d72c8323be99df69d6d0cf82745e5abec79d5e0374f4df560",
+        "bytes": 109967296
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "LLVMContextCreate",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a320",
+            "size": "27",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 20309
+          },
+          {
+            "name": "LLVMContextDispose",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a3e0",
+            "size": "24",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 41790
+          }
+        ],
+        "export_count": 44459,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 44982,
+          "exports": 44459,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2",
+      "source_report_sha256": "79c3ba50f371769a5e3749044872e28a11af1f3f46ebaefd5c12f877747ce855",
+      "runtime_identity_sha256": "2351776ec934386f246a8ecfb0b46e5163f1f8724d1653261741d9cc9beecf0d",
+      "catalog_sha256": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+      "catalog_tools": 220,
+      "buffer_bytes": 67108864,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 85367.89133400001,
+          "reply_bytes": 28985861,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-1-complete/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 799.9941170000093,
+          "reply_bytes": 360,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 539.529025,
+        "discovery_ms": 866.2989360000001,
+        "bundle_verification_ms": 141.96587600000203,
+        "runtime_validation_after_ms": 484.51143599998613
+      },
+      "wall_seconds": 89.863,
+      "cpu_seconds": 84.154022,
+      "kernel_family_peak_bytes": 1961029632,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 81,
+        "input_catalog_once": 53989,
+        "arguments": 65,
+        "text_replies": 4301313,
+        "combined": 4355448,
+        "only_three_task_tools": 4304393,
+        "complete_transport_catalog": 812145
+      },
+      "receipt_sha256": {
+        "report.json": "e6fc59d7d0bf8e40beefdd0c4f5ed80cae27f89adbdfcfc4dfb95b6ed1cb1c39",
+        "catalog.json": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+        "transcript.json": "2aed5402825543bd90e432f02ad39978a5198e1ca40d3ba1d24d6726c513d791",
+        "evidence.json": "4e3d459408195f44700e28a97299cfc8ca4fbf7e3b759bf92f95c831ce08b416",
+        "llvm-1-complete.log": "c04eb008e0717e42179213b72aba6eb208cc70cc124ca0a79bcb4d543843e142"
+      }
+    },
+    {
+      "case": "llvm-1-selected",
+      "lane": "selected",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1",
+        "sha256": "436887791de0478d72c8323be99df69d6d0cf82745e5abec79d5e0374f4df560",
+        "bytes": 109967296
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "LLVMContextCreate",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a320",
+            "size": "27",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 20309
+          },
+          {
+            "name": "LLVMContextDispose",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a3e0",
+            "size": "24",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 41790
+          }
+        ],
+        "export_count": 44459,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 44982,
+          "exports": 44459,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2",
+      "source_report_sha256": "79c3ba50f371769a5e3749044872e28a11af1f3f46ebaefd5c12f877747ce855",
+      "runtime_identity_sha256": "70987d2a0148a01c8fa95bf0c4cc0b0580cf44a110585eb0b70e7b9877867288",
+      "catalog_sha256": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+      "catalog_tools": 220,
+      "buffer_bytes": 67108864,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1",
+            "detail": "summary"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 17567.375612,
+          "reply_bytes": 5777,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["LLVMContextCreate", "LLVMContextDispose"],
+              "offset": 0,
+              "limit": 2
+            }
+          },
+          "phase": "page",
+          "elapsed_ms": 242.62560299999677,
+          "reply_bytes": 7387,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["__rea_export_oracle_missing__"],
+              "limit": 1
+            }
+          },
+          "phase": "negative",
+          "elapsed_ms": 22.932949999998527,
+          "reply_bytes": 6165,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-1-selected/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 365.4510900000023,
+          "reply_bytes": 360,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 503.02861599999994,
+        "discovery_ms": 880.4509559999999,
+        "bundle_verification_ms": 180.80891500000143,
+        "runtime_validation_after_ms": 468.78659699999844
+      },
+      "wall_seconds": 21.477,
+      "cpu_seconds": 19.609856,
+      "kernel_family_peak_bytes": 1327632384,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 81,
+        "input_catalog_once": 54128,
+        "arguments": 259,
+        "text_replies": 2878,
+        "combined": 57346,
+        "only_three_task_tools": 6291,
+        "complete_transport_catalog": 815054
+      },
+      "receipt_sha256": {
+        "report.json": "4f9922b6fe5974787f98c7fa948dc6ecf70eaa91767a8353311dd213e27b2842",
+        "catalog.json": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+        "transcript.json": "dc9172ba290f01a59ab9858799cb551e86d75d58c1b05dad88b728e5c72c2996",
+        "evidence.json": "8d62cf7d270024533afa34b33ff0b727da78189c50ec4b5e173c8c5f06745f8c",
+        "llvm-1-selected.log": "d9fe3a32f6cd5f4c716c4f375bea97437166d1ef9f19b0e1bbcc7175a1515340"
+      }
+    },
+    {
+      "case": "llvm-2-complete",
+      "lane": "complete",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1",
+        "sha256": "436887791de0478d72c8323be99df69d6d0cf82745e5abec79d5e0374f4df560",
+        "bytes": 109967296
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "LLVMContextCreate",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a320",
+            "size": "27",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 20309
+          },
+          {
+            "name": "LLVMContextDispose",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a3e0",
+            "size": "24",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 41790
+          }
+        ],
+        "export_count": 44459,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 44982,
+          "exports": 44459,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2",
+      "source_report_sha256": "79c3ba50f371769a5e3749044872e28a11af1f3f46ebaefd5c12f877747ce855",
+      "runtime_identity_sha256": "2351776ec934386f246a8ecfb0b46e5163f1f8724d1653261741d9cc9beecf0d",
+      "catalog_sha256": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+      "catalog_tools": 220,
+      "buffer_bytes": 67108864,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 148171.281951,
+          "reply_bytes": 28985861,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-2-complete/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 668.5614009999845,
+          "reply_bytes": 360,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 520.4002560000001,
+        "discovery_ms": 916.0945740000001,
+        "bundle_verification_ms": 264.4270039999974,
+        "runtime_validation_after_ms": 1093.8517989999964
+      },
+      "wall_seconds": 153.857,
+      "cpu_seconds": 151.772905,
+      "kernel_family_peak_bytes": 1882451968,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 81,
+        "input_catalog_once": 53989,
+        "arguments": 65,
+        "text_replies": 4301313,
+        "combined": 4355448,
+        "only_three_task_tools": 4304393,
+        "complete_transport_catalog": 812145
+      },
+      "receipt_sha256": {
+        "report.json": "cd0bd9f0eed7926a83b9e22a0c7cccad6e0835d08d3bb55ea14065f85b0cd132",
+        "catalog.json": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+        "transcript.json": "0c14301770889aa95bc4031862a5043baf84f2f2f289bee60228bd8bdb631dc3",
+        "evidence.json": "4e3d459408195f44700e28a97299cfc8ca4fbf7e3b759bf92f95c831ce08b416",
+        "llvm-2-complete.log": "b54f76cddecc6d2d2cfde8f8bf363fbdfeba0ea008449427ca66c27f384695ac"
+      }
+    },
+    {
+      "case": "llvm-2-selected",
+      "lane": "selected",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1",
+        "sha256": "436887791de0478d72c8323be99df69d6d0cf82745e5abec79d5e0374f4df560",
+        "bytes": 109967296
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "LLVMContextCreate",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a320",
+            "size": "27",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 20309
+          },
+          {
+            "name": "LLVMContextDispose",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a3e0",
+            "size": "24",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 41790
+          }
+        ],
+        "export_count": 44459,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 44982,
+          "exports": 44459,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2",
+      "source_report_sha256": "79c3ba50f371769a5e3749044872e28a11af1f3f46ebaefd5c12f877747ce855",
+      "runtime_identity_sha256": "70987d2a0148a01c8fa95bf0c4cc0b0580cf44a110585eb0b70e7b9877867288",
+      "catalog_sha256": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+      "catalog_tools": 220,
+      "buffer_bytes": 67108864,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1",
+            "detail": "summary"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 18165.990165,
+          "reply_bytes": 5777,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["LLVMContextCreate", "LLVMContextDispose"],
+              "offset": 0,
+              "limit": 2
+            }
+          },
+          "phase": "page",
+          "elapsed_ms": 390.26375899999766,
+          "reply_bytes": 7387,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["__rea_export_oracle_missing__"],
+              "limit": 1
+            }
+          },
+          "phase": "negative",
+          "elapsed_ms": 16.451759999999922,
+          "reply_bytes": 6165,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-2-selected/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 553.4749139999985,
+          "reply_bytes": 360,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 613.766852,
+        "discovery_ms": 942.3398440000001,
+        "bundle_verification_ms": 202.0352950000015,
+        "runtime_validation_after_ms": 1249.5403350000015
+      },
+      "wall_seconds": 23.885,
+      "cpu_seconds": 19.483085,
+      "kernel_family_peak_bytes": 1300123648,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 81,
+        "input_catalog_once": 54128,
+        "arguments": 259,
+        "text_replies": 2878,
+        "combined": 57346,
+        "only_three_task_tools": 6291,
+        "complete_transport_catalog": 815054
+      },
+      "receipt_sha256": {
+        "report.json": "e2cd97a03b00bf75e99c1ba912c4bb4883a949a308a5832312c054ee21963209",
+        "catalog.json": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+        "transcript.json": "cfe9bab93eda9adae17d83f0c6bfa7b67f1691e10a4d8b34f53da3bb8a9c03b1",
+        "evidence.json": "8d62cf7d270024533afa34b33ff0b727da78189c50ec4b5e173c8c5f06745f8c",
+        "llvm-2-selected.log": "16634e96364aba0ee636ca60f7e1d008e7a2670c27f0c937cd5d0187dea2c624"
+      }
+    },
+    {
+      "case": "llvm-3-complete",
+      "lane": "complete",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1",
+        "sha256": "436887791de0478d72c8323be99df69d6d0cf82745e5abec79d5e0374f4df560",
+        "bytes": 109967296
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "LLVMContextCreate",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a320",
+            "size": "27",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 20309
+          },
+          {
+            "name": "LLVMContextDispose",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a3e0",
+            "size": "24",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 41790
+          }
+        ],
+        "export_count": 44459,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 44982,
+          "exports": 44459,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2",
+      "source_report_sha256": "79c3ba50f371769a5e3749044872e28a11af1f3f46ebaefd5c12f877747ce855",
+      "runtime_identity_sha256": "2351776ec934386f246a8ecfb0b46e5163f1f8724d1653261741d9cc9beecf0d",
+      "catalog_sha256": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+      "catalog_tools": 220,
+      "buffer_bytes": 67108864,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 83141.76860099999,
+          "reply_bytes": 28985861,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-3-complete/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 963.3116939999891,
+          "reply_bytes": 360,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 437.848797,
+        "discovery_ms": 919.8897149999999,
+        "bundle_verification_ms": 143.20261600000958,
+        "runtime_validation_after_ms": 426.69520800000464
+      },
+      "wall_seconds": 87.839,
+      "cpu_seconds": 85.855826,
+      "kernel_family_peak_bytes": 2021089280,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 81,
+        "input_catalog_once": 53989,
+        "arguments": 65,
+        "text_replies": 4301313,
+        "combined": 4355448,
+        "only_three_task_tools": 4304393,
+        "complete_transport_catalog": 812145
+      },
+      "receipt_sha256": {
+        "report.json": "280297bf8394c935c8b7e4edcf462df999594a8736540bb91c736140c3a64087",
+        "catalog.json": "0518c289d31f72afa11e8d79292066b38a11f0eae7bb4b25c73f1f8cd62a2d7d",
+        "transcript.json": "1e2f4118740feb12f43be140f001952de6e59efd16aa21e45d619a4e7d95ed14",
+        "evidence.json": "4e3d459408195f44700e28a97299cfc8ca4fbf7e3b759bf92f95c831ce08b416",
+        "llvm-3-complete.log": "1e21f2938434025c00a7a0162199a10b472ad99b3a476ace8ce14b074bf5fc71"
+      }
+    },
+    {
+      "case": "llvm-3-selected",
+      "lane": "selected",
+      "artifact": {
+        "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1",
+        "sha256": "436887791de0478d72c8323be99df69d6d0cf82745e5abec79d5e0374f4df560",
+        "bytes": 109967296
+      },
+      "answer": {
+        "rows": [
+          {
+            "name": "LLVMContextCreate",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a320",
+            "size": "27",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 20309
+          },
+          {
+            "name": "LLVMContextDispose",
+            "name_bytes_base64": null,
+            "name_utf8_decodable": true,
+            "value": "0xf2a3e0",
+            "size": "24",
+            "type": "function",
+            "binding": "global",
+            "version": {
+              "index": 2,
+              "name": "LLVM_14",
+              "name_bytes_base64": null,
+              "name_utf8_decodable": true,
+              "hidden": false
+            },
+            "source_index": 41790
+          }
+        ],
+        "export_count": 44459,
+        "negative": [],
+        "coverage": {
+          "examined_entries": 44982,
+          "exports": 44459,
+          "reason": null,
+          "status": "complete"
+        }
+      },
+      "parent_evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2",
+      "source_report_sha256": "79c3ba50f371769a5e3749044872e28a11af1f3f46ebaefd5c12f877747ce855",
+      "runtime_identity_sha256": "70987d2a0148a01c8fa95bf0c4cc0b0580cf44a110585eb0b70e7b9877867288",
+      "catalog_sha256": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+      "catalog_tools": 220,
+      "buffer_bytes": 67108864,
+      "calls": [
+        {
+          "name": "inspect_native_exports",
+          "input": {
+            "path": "/usr/lib/x86_64-linux-gnu/libLLVM-14.so.1",
+            "detail": "summary"
+          },
+          "phase": "inspect",
+          "elapsed_ms": 16369.459225,
+          "reply_bytes": 5777,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["LLVMContextCreate", "LLVMContextDispose"],
+              "offset": 0,
+              "limit": 2
+            }
+          },
+          "phase": "page",
+          "elapsed_ms": 257.42561299999943,
+          "reply_bytes": 7387,
+          "is_error": false
+        },
+        {
+          "name": "inspect_analysis_view",
+          "input": {
+            "source": {
+              "kind": "retained-evidence",
+              "evidence_id": "ev_9070e1eb4d32e2667b73dfc9724d1f6bcaa8d21470137f5138d1d3a13f210fd2"
+            },
+            "view": {
+              "kind": "native-exports",
+              "collection": "exports",
+              "names": ["__rea_export_oracle_missing__"],
+              "limit": 1
+            }
+          },
+          "phase": "negative",
+          "elapsed_ms": 19.351289000001998,
+          "reply_bytes": 6165,
+          "is_error": false
+        },
+        {
+          "name": "export_evidence_bundle",
+          "input": {
+            "path": "/tmp/rea-perf-native-exports-20261023/final-cohort/llvm-3-selected/evidence.json"
+          },
+          "phase": "export",
+          "elapsed_ms": 345.7306609999978,
+          "reply_bytes": 360,
+          "is_error": false
+        }
+      ],
+      "phases": {
+        "runtime_validation_before_ms": 502.36842699999994,
+        "discovery_ms": 985.213513,
+        "bundle_verification_ms": 130.7405859999999,
+        "runtime_validation_after_ms": 533.3958650000022
+      },
+      "wall_seconds": 20.463,
+      "cpu_seconds": 20.137611,
+      "kernel_family_peak_bytes": 1360908288,
+      "events_at_payload_exit": {
+        "memory.events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "pids.events": {
+          "max": 0
+        }
+      },
+      "payload_cleanup_verified": true,
+      "final_whole_scope_events": null,
+      "token_proxy": {
+        "question": 81,
+        "input_catalog_once": 54128,
+        "arguments": 259,
+        "text_replies": 2878,
+        "combined": 57346,
+        "only_three_task_tools": 6291,
+        "complete_transport_catalog": 815054
+      },
+      "receipt_sha256": {
+        "report.json": "102b39fd46d60075d1c6fdb669720075cbc9ccdead4b6d41e8490fb89cd17a97",
+        "catalog.json": "85b82eeea657f95647bf4ec97822d3bbd485c96cc98c82091f17be1f48f1a3cf",
+        "transcript.json": "7e6b9e17835e492d344d0f6dc85af60c50c7942f0c1413e728f6c8266d3f8064",
+        "evidence.json": "8d62cf7d270024533afa34b33ff0b727da78189c50ec4b5e173c8c5f06745f8c",
+        "llvm-3-selected.log": "ebecfa4c021c9bb08593ccde868360794877d3d8df2dcedc4ddac1617a19b370"
+      }
+    }
+  ]
+}
