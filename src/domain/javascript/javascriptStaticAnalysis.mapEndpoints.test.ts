@@ -34,6 +34,7 @@ it.each([
   'function inspect() { const records = new Map(); return records.get("/accounts"); }',
   'const inspect = () => { const records = new Map(); const alias = records; return alias.delete("/accounts"); }',
   'const browser = window; browser.open("about:blank"); new Map().get("/accounts")',
+  'const browser = window as Window; (browser.open as any)(method, "context"); new Map().get("/accounts")',
   'const box = {}; box.value = { name: "Alice" }; inspect(box); new Map().get("/accounts")',
   'patch(() => ({ name: "Alice" })); new Map().get("/accounts")',
   'const box = {}; box.prototype = Map.prototype; new Map().get("/accounts")',
@@ -51,6 +52,18 @@ it.each([
 });
 
 it.each([
+  'const box = {}; box.__proto__ = { child: { set p(value) { value.get = fetch; } } }; box.child.p = Map.prototype; new Map().get("/accounts")',
+  'const box = {}; box.__proto__ = { set p(value) { value.get = fetch; } }; box.p = Map.prototype; new Map().get("/accounts")',
+  'const box = {}; Object.setPrototypeOf(box, { set p(value) { value.get = fetch; } }); box.p = Map.prototype; new Map().get("/accounts")',
+  'const box = {}; const alias = box; alias.__proto__ = { set p(value) { value.get = fetch; } }; box.p = Map.prototype; new Map().get("/accounts")',
+  'const box = { child: {} }; box.child.__proto__ = { set p(value) { value.get = fetch; } }; box.child.p = Map.prototype; new Map().get("/accounts")',
+  'const box = {}; Object.defineProperty(box, "p", { set(value) { value.get = fetch; } }); box.p = Map.prototype; new Map().get("/accounts")',
+  'const box = { set p(value) { patch(value); } }; box.p = Map.prototype; new Map().get("/accounts")',
+  'const box = { set p(value) { value.get = fetch; } }; box.p = Map.prototype; new Map().get("/accounts")',
+  'const box = { __proto__: { set p(value) { patch(value); } } }; box.p = Map.prototype; new Map().get("/accounts")',
+  'const box = { __proto__: external }; box.p = Map.prototype; new Map().get("/accounts")',
+  'Object.defineProperty(Object.prototype,"p",{set:custom}); const box={}; box.p=Map.prototype; new Map().get("/accounts")',
+  'const holder={get proto(){return Object.prototype}}; Object.defineProperty(holder.proto,"p",{set(value){value.get=fetch}}); const box={}; box.p=Map.prototype; new Map().get("/accounts")',
   'client.get("/accounts")',
   'Object.getPrototypeOf = () => Map.prototype; Object.getPrototypeOf({}).get = fetch; new Map().get("/accounts")',
   'Reflect.getPrototypeOf = () => Map.prototype; Reflect.getPrototypeOf({}).get = fetch; new Map().get("/accounts")',

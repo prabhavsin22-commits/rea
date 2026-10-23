@@ -406,3 +406,45 @@ it.each([
     );
   },
 );
+
+it("retains an alternate createRequire filename in static reference facts", () => {
+  const source = `${imported}const load=make(new URL("../other/nested/main.cjs", import.meta.url));load("../shared/window.cjs");`;
+  expect(
+    analyzeJavaScriptStaticSource(source).references.filter(
+      ({ kind }) => kind === "require",
+    ),
+  ).toMatchObject([
+    {
+      kind: "require",
+      specifier: "../shared/window.cjs",
+      resolution_base_path: "../other/nested/main.cjs",
+    },
+  ]);
+});
+
+it("retains possible loading for a callable stored on a resolve property", () => {
+  const source = `${imported}const require={resolve:make(import.meta.url)};require.resolve("./window.cjs");`;
+  const references = analyzeJavaScriptStaticSource(source).references.filter(
+    ({ kind }) => kind === "require",
+  );
+  expect(references).toHaveLength(1);
+  expect(references[0]?.operation).toBe("load");
+  expect(references[0]?.specifier ?? references[0]?.expression).toContain(
+    "./window.cjs",
+  );
+});
+
+it("retains native resolver identity independently of an unknown filename base", () => {
+  const source = `${imported}const load=make(process.argv[1]);load.resolve("./window.cjs");`;
+  expect(
+    analyzeJavaScriptStaticSource(source).references.filter(
+      ({ kind }) => kind === "require",
+    ),
+  ).toMatchObject([
+    {
+      specifier: null,
+      operation: "resolve",
+      expression: expect.stringContaining("load.resolve"),
+    },
+  ]);
+});

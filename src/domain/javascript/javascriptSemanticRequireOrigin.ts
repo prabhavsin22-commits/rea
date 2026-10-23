@@ -654,6 +654,8 @@ const loaderInvocationInterop = (state: JavaScriptSemanticAnalysisState) => {
 };
 
 export interface JavaScriptRequireCallFact {
+  /** Selected native resolver receiver; mutation is checked on this exact value. */
+  readonly resolverReceiver?: t.MemberExpression["object"];
   readonly operation: "load" | "resolve";
   readonly loader: JavaScriptRequireLoaderFact;
   readonly arguments:
@@ -719,6 +721,7 @@ export const semanticRequireCallAt = (
         factoryBindingIds,
       );
       return {
+        resolverReceiver: callee.object,
         operation: "resolve",
         loader: selected?.loader ?? loader,
         arguments: node.arguments,

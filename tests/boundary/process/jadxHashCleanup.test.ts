@@ -1,5 +1,6 @@
 import { expect, it, vi } from "vitest";
 
+import { parseBinaryTarget } from "../../../src/application/BinaryTargetResolver.js";
 import { OwnedFileHandle } from "../../../src/filesystem/OwnedFileHandle.js";
 import { RegularFileCleanupFailure } from "../../../src/filesystem/OwnedRegularFile.js";
 import { AnalysisError } from "../../../src/domain/analysisErrorBase.js";
@@ -9,8 +10,10 @@ import {
 } from "../../fixtures/android/jadx.js";
 
 it("resolves descriptor uncertainty after an immediate owned hash close retry", async () => {
-  const { service, apk, provider, launches } =
-    await createJadxProtocolFixture();
+  const { apk, provider, launches } = await createJadxProtocolFixture();
+  // Resolve target admission before injecting failure into the provider hash.
+  const target = await parseBinaryTarget(apk);
+  if (!target.ok) throw target.error;
   const cause = new Error("controlled hash close failure");
   const original = OwnedFileHandle.prototype.close;
   const owners: OwnedFileHandle[] = [];
@@ -22,8 +25,9 @@ it("resolves descriptor uncertainty after an immediate owned hash close retry", 
       await original.call(this);
     });
   try {
-    const result = await service.execute("inspect_android_package", {
-      path: apk,
+    const result = await provider.execute(target.value, {
+      operation: "inspect_android_package",
+      input: { path: apk },
     });
     if (result.ok) throw new Error("Expected the original close failure");
     expect(result.error.cleanupIncomplete).toBe(false);
@@ -45,8 +49,10 @@ it("resolves descriptor uncertainty after an immediate owned hash close retry", 
 });
 
 it("keeps hash cleanup live until the exact retained descriptor closes", async () => {
-  const { service, apk, provider, launches } =
-    await createJadxProtocolFixture();
+  const { apk, provider, launches } = await createJadxProtocolFixture();
+  // Resolve target admission before injecting failure into the provider hash.
+  const target = await parseBinaryTarget(apk);
+  if (!target.ok) throw target.error;
   const cause = new Error("controlled persistent hash close failure");
   const original = OwnedFileHandle.prototype.close;
   const owners: OwnedFileHandle[] = [];
@@ -59,8 +65,9 @@ it("keeps hash cleanup live until the exact retained descriptor closes", async (
       await original.call(this);
     });
   try {
-    const result = await service.execute("inspect_android_package", {
-      path: apk,
+    const result = await provider.execute(target.value, {
+      operation: "inspect_android_package",
+      input: { path: apk },
     });
     if (result.ok) throw new Error("Expected retained descriptor cleanup");
     expect(result.error.cleanupIncomplete).toBe(true);

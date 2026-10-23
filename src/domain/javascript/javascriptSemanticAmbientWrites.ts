@@ -590,8 +590,10 @@ export function* indexJavaScriptAmbientWritesSteps(
           ["Object", "Reflect"].includes(invocation.path[1] ?? "")
         )
       ) {
-        if (browserMethod !== undefined)
+        if (browserMethod !== undefined) {
           browserReceiverMethods.add(browserMethod);
+          state.intrinsicBrowserReceiverCalls.add(node);
+        }
         retainEscape(callee.object, browserMethod !== undefined);
       }
     },

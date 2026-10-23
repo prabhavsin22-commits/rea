@@ -96,10 +96,7 @@ describe("HTTP comparison response coverage", () => {
       [response],
       [{ ...response, status: 500 }],
     );
-    expect(compareNetwork(before, after)).toMatchObject({
-      status: "changed",
-      changes: [expect.objectContaining({ change: "modified" })],
-    });
+    expectObservedResponseChange(before, after);
   });
 
   it.each([
@@ -110,7 +107,7 @@ describe("HTTP comparison response coverage", () => {
       [{ ...response, encodedDataLength: 100 }],
       [{ ...response, ...change }],
     );
-    expect(compareNetwork(before, after).status).toBe("changed");
+    expectObservedResponseChange(before, after);
   });
 });
 
@@ -145,7 +142,7 @@ describe("HTTP comparison repeated request coverage", () => {
         { ...response, requestId: "first-after", encodedDataLength: 100 },
       ],
     );
-    expect(compareNetwork(before, after).status).toBe("changed");
+    expectObservedResponseChange(before, after);
   });
 
   it("preserves the association between complete response fields", async () => {
@@ -169,7 +166,7 @@ describe("HTTP comparison repeated request coverage", () => {
         },
       ],
     );
-    expect(compareNetwork(before, after).status).toBe("changed");
+    expectObservedResponseChange(before, after);
   });
 });
 
@@ -252,4 +249,23 @@ const markNetworkInventoriesComplete = (
       inspection.completeness[key] = inspection.completeness[key].filter(
         (section) => !sections.has(section),
       );
+};
+
+/** Live partial inventories cannot establish response correspondence across captures. */
+const expectObservedResponseChange = (
+  before: WebPageInspection,
+  after: WebPageInspection,
+): void => {
+  expect(compareNetwork(before, after)).toMatchObject({
+    status: "unknown",
+    total_changes: 0,
+    changes: [],
+  });
+  // Exercise comparable response facts with explicitly complete inventory coverage.
+  markNetworkInventoriesComplete(before, after);
+  expect(compareNetwork(before, after)).toMatchObject({
+    status: "changed",
+    total_changes: 1,
+    changes: [expect.objectContaining({ change: "modified" })],
+  });
 };

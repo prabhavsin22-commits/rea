@@ -24,6 +24,19 @@ const createSession = () => ({
   state: "paused" as const,
 });
 
+const sessionCleanupFailure = () =>
+  new AnalysisCapabilityUnavailableError(
+    "frida",
+    "close_frida_session",
+    "session cleanup failed",
+    {
+      cleanup: {
+        reason: "session cleanup failed",
+        resources: [createSession().sessionId],
+      },
+    },
+  );
+
 const createScriptObservation = () => ({
   scriptId: "00000000-0000-4000-8000-000000000002",
   sourceKind: "inline" as const,
@@ -455,11 +468,7 @@ it.each([false, true])(
           return cleanupFails
             ? {
                 ok: false,
-                error: new AnalysisCapabilityUnavailableError(
-                  "frida",
-                  "close_frida_session",
-                  "session cleanup failed",
-                ),
+                error: sessionCleanupFailure(),
               }
             : { ok: true, value: { targetResumeObserved: false } };
         },
@@ -485,13 +494,16 @@ it.each([false, true])(
     if (result.ok) return;
     expect(result.error).not.toBeInstanceOf(AnalysisCancelledError);
     if (cleanupFails) {
-      expect(result.error).toBeInstanceOf(AnalysisCapabilityUnavailableError);
-      expect(result.error.cause).toBe(primary);
-      expect(result.error.diagnostics).toEqual({
-        native_status: "resume_rejected",
+      expect(result.error.cleanupPrimary).toBe(primary);
+      expect(result.error.cleanupIncomplete).toBe(true);
+      expect(result.error.diagnostics).toMatchObject({
+        primary_error: {
+          code: "capability_unavailable",
+          details: { diagnostics: { native_status: "resume_rejected" } },
+        },
+        cleanup_error: { details: { reason: "session cleanup failed" } },
       });
       expect(result.error.cleanup).toMatchObject({
-        reason: expect.stringContaining("session cleanup failed"),
         resources: [createSession().sessionId],
       });
     } else {
@@ -835,11 +847,7 @@ it.each([
         async closeSession() {
           return {
             ok: false,
-            error: new AnalysisCapabilityUnavailableError(
-              "frida",
-              "close_frida_session",
-              "session cleanup failed",
-            ),
+            error: sessionCleanupFailure(),
           };
         },
       }),
@@ -906,39 +914,42 @@ it("records target selection in Evidence without remote authentication values", 
   expect(parameters).not.toContain(certificate);
 });
 
-it("reports completed cleanup when closing the parent session releases a failed script", async () => {
-  const service = new FridaInstrumentationService(
-    createProvider({
-      async loadScript() {
-        return {
-          ok: false,
-          error: new AnalysisCapabilityUnavailableError(
-            "frida",
-            "load_frida_script",
-            "script load failed",
-            {
-              cleanup: {
-                reason: "script unload failed",
-                resources: ["script-1"],
-              },
-            },
-          ),
-        };
+it.each([false, true])(
+  "clears a failed script only when its provider confirms release (%s)",
+  async (confirmed) => {
+    const failure = new AnalysisCapabilityUnavailableError(
+      "frida",
+      "load_frida_script",
+      "script load failed",
+      {
+        cleanup: { reason: "script unload failed", resources: ["script-1"] },
       },
-    }),
-  );
-
-  const result = await service.instrument({
-    mode: "spawn",
-    deviceId: "local",
-    program: "/tmp/fixture",
-    source: { sourceKind: "inline", source: "send('ready');" },
-    durationMs: 1,
-  });
-
-  expect(result.ok).toBe(false);
-  if (!result.ok) expect(result.error.cleanupIncomplete).toBe(false);
-});
+    );
+    const service = new FridaInstrumentationService(
+      createProvider({
+        async loadScript() {
+          return { ok: false, error: failure };
+        },
+        async closeSession() {
+          if (confirmed) failure.resolveCleanup();
+          return { ok: true, value: { targetResumeObserved: false } };
+        },
+      }),
+    );
+    const result = await service.instrument({
+      mode: "spawn",
+      deviceId: "local",
+      program: "/tmp/fixture",
+      source: { sourceKind: "inline", source: "send('ready');" },
+      durationMs: 1,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe(failure);
+    expect(result.error.cleanupIncomplete).toBe(!confirmed);
+    if (!confirmed) expect(result.error.cleanupResources).toEqual(["script-1"]);
+  },
+);
 
 it("cleans up a session and returns typed cancellation after a pending start", async () => {
   let finishStart: (() => void) | undefined;
@@ -1080,11 +1091,7 @@ it.each([
           return cleanupFails
             ? {
                 ok: false,
-                error: new AnalysisCapabilityUnavailableError(
-                  "frida",
-                  "close_frida_session",
-                  "session cleanup failed",
-                ),
+                error: sessionCleanupFailure(),
               }
             : { ok: true, value: { targetResumeObserved: false } };
         },
@@ -1106,13 +1113,16 @@ it.each([
     expect(result.error).not.toBeInstanceOf(AnalysisCancelledError);
     expect(controller.signal.reason).toBe(abortReason);
     if (cleanupFails) {
-      expect(result.error).toBeInstanceOf(AnalysisCapabilityUnavailableError);
-      expect(result.error.cause).toBe(primary);
-      expect(result.error.diagnostics).toEqual({
-        native_status: "compile_rejected",
+      expect(result.error.cleanupPrimary).toBe(primary);
+      expect(result.error.cleanupIncomplete).toBe(true);
+      expect(result.error.diagnostics).toMatchObject({
+        primary_error: {
+          code: "capability_unavailable",
+          details: { diagnostics: { native_status: "compile_rejected" } },
+        },
+        cleanup_error: { details: { reason: "session cleanup failed" } },
       });
       expect(result.error.cleanup).toMatchObject({
-        reason: expect.stringContaining("session cleanup failed"),
         resources: [createSession().sessionId],
       });
     } else {

@@ -196,6 +196,8 @@ const projectedSourceFactsAtRead = (
   | {
       readonly sources: readonly ProjectedSource[];
       readonly retainsOrigin: boolean;
+      /** Effects on this selected slot, excluding writes that only select its receiver. */
+      readonly slotMayHaveChanged: boolean;
     }
   | undefined => {
   const read = semanticBindingAtRead(binding, reference, state.parentsByNode);
@@ -335,6 +337,9 @@ const projectedSourceFactsAtRead = (
     )
   )
     return undefined;
+  const slotMayHaveChanged = writes.some(
+    (effect) => !superseded(effect) && effect.path.length === path.length,
+  );
   const sources: ProjectedSource[] = [];
   for (const effect of writes) {
     if (!retainEligibility && superseded(effect)) continue;
@@ -383,7 +388,7 @@ const projectedSourceFactsAtRead = (
     }
   }
   if (!retainEligibility && replacement !== undefined)
-    return { sources, retainsOrigin: false };
+    return { sources, retainsOrigin: false, slotMayHaveChanged };
   for (const initializer of read.binding.initializers) {
     if (semanticReferenceIterationUnknown(initializer, state)) return undefined;
     if (semanticReferenceSourcesInactive(initializer, state)) continue;
@@ -423,5 +428,5 @@ const projectedSourceFactsAtRead = (
         });
     }
   }
-  return { sources, retainsOrigin: true };
+  return { sources, retainsOrigin: true, slotMayHaveChanged };
 };

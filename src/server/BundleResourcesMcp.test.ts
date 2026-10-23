@@ -319,6 +319,7 @@ const expectResourceSchemaBranches = async (client: Client): Promise<void> => {
       validResult: jsonObjectSchema.parse({
         target_sha256: "a".repeat(64),
         catalogs: [],
+        inventory_coverage: { scope: "container-entries", status: "unknown" },
         total_records: 0,
         offset: 0,
         limit: 1,
@@ -365,9 +366,11 @@ const expectResourceSchemaBranches = async (client: Client): Promise<void> => {
       parameters: {},
       result: validResult,
     });
-    expect(contract.outputSchema.safeParse(validEvidence).success, name).toBe(
-      true,
-    );
+    const parsed = contract.outputSchema.safeParse(validEvidence);
+    expect(
+      parsed.success,
+      parsed.success ? name : `${name}: ${parsed.error.message}`,
+    ).toBe(true);
     const malformedResult = structuredClone(validResult) as Record<
       string,
       JsonValue

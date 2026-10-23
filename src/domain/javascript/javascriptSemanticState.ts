@@ -171,6 +171,8 @@ export interface JavaScriptSemanticAnalysisState {
   readonly ambientWrites: SemanticPropertyPathCoverage;
   /** Ambient object identities passed to calls whose effects are not evaluated. */
   readonly ambientEscapes: SemanticPropertyPathCoverage;
+  /** Ambient owner proved these native browser calls keep their receiver. */
+  readonly intrinsicBrowserReceiverCalls: WeakSet<t.Node>;
   /** Capture sites keep later opaque effects from changing earlier copies. */
   readonly ambientEscapeEffects: JavaScriptSemanticMemberEffect[];
   /** Source sites distinguish replacement before an ambient identity capture from later writes. */

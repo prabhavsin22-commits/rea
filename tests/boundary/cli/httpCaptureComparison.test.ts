@@ -39,9 +39,16 @@ it("CLI compares incomplete HTTP responses without inventing changes", async () 
     expect(pending.network.requests).toMatchObject([
       { status: 200, mime_type: "application/json", encoded_data_length: null },
     ]);
+    expect(changed.network.requests).toMatchObject([
+      { status: 500, mime_type: "application/json", encoded_data_length: 100 },
+    ]);
     expect(finished.network.requests).toMatchObject([
       { status: 200, mime_type: "application/json", encoded_data_length: 100 },
     ]);
+    for (const capture of [pending, finished, changed])
+      expect(capture.completeness.attach_limited_sections).toContain(
+        "network_requests",
+      );
     const paths = [pending, finished, changed].map((_, index) =>
       join(root, `capture-${String(index)}.json`),
     );
@@ -53,7 +60,9 @@ it("CLI compares incomplete HTTP responses without inventing changes", async () 
     for (const [left, right, status, count] of [
       [0, 1, "unknown", 0],
       [1, 0, "unknown", 0],
-      [0, 2, "changed", 1],
+      // Attach-limited captures cannot pair repeated requests across snapshots.
+      [0, 2, "unknown", 0],
+      [2, 0, "unknown", 0],
     ] as const) {
       const compared = await runCliJson([
         "compare-web-captures",
