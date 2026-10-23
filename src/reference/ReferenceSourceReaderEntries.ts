@@ -85,7 +85,23 @@ export const traverseDirectory = async (
     let result: ReferenceSourceResult<undefined> = ok(undefined);
     let cleanup: ArtifactCleanupAttempt;
     try {
-      for (;;) {
+      let directory = current;
+      if (current.exclusions.prepareDirectory !== undefined) {
+        const prepared = await current.exclusions.prepareDirectory(
+          pathFromRoot(state.root, current.path),
+        );
+        if (!prepared.ok) result = prepared;
+        else if (isAborted(state.signal)) result = err(cancelled());
+        else directory = { path: current.path, exclusions: prepared.value };
+        if (!result.ok)
+          recordDirectoryFailure(
+            state,
+            current.path,
+            result.error.code === "invalid-root" ? "io" : result.error.code,
+            result.error.message,
+          );
+      }
+      while (result.ok) {
         let child: Dirent | null;
         try {
           child = await handle.read();
@@ -104,7 +120,12 @@ export const traverseDirectory = async (
           firstUnrepresentableNameHex ??= decoded.rawHex;
           continue;
         }
-        result = await processEntry(state, current, decoded.name, directories);
+        result = await processEntry(
+          state,
+          directory,
+          decoded.name,
+          directories,
+        );
         if (!result.ok) break;
       }
     } finally {
@@ -231,7 +252,11 @@ const processEntry = async (
   const metadata = await readMetadata(absolute);
   if (isAborted(state.signal)) return { ok: false, error: cancelled() };
   if (!metadata.ok) {
-    const excluded = applyExclusion(state.shouldExclude, path, "unknown");
+    const excluded = applyExclusion(
+      current.exclusions.shouldExclude,
+      path,
+      "unknown",
+    );
     if (!excluded.ok)
       return {
         ok: false,
@@ -251,7 +276,7 @@ const processEntry = async (
       : metadata.value.isFile()
         ? "file"
         : "other";
-  const excluded = applyExclusion(state.shouldExclude, path, kind);
+  const excluded = applyExclusion(current.exclusions.shouldExclude, path, kind);
   if (!excluded.ok)
     return {
       ok: false,
@@ -277,7 +302,7 @@ const processEntry = async (
       ),
     );
   else if (kind === "directory") {
-    directories.push({ path: absolute });
+    directories.push({ path: absolute, exclusions: current.exclusions });
   } else if (kind !== "file")
     state.entries.push(
       entryFailure(
