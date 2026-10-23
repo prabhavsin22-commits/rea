@@ -103,8 +103,8 @@ same bundle. Export writes only the caller-selected output file.
 
 When the four-byte metadata magic is present but version bytes are incomplete,
 the fact retains `raw_version: null`; it does not offer an IL2CPP metadata
-inspection probe. A complete magic/version prefix with supported raw version 29,
-31 or 39 offers an
+inspection probe. A complete magic/version prefix with supported raw version 24,
+27, 29, 31 or 39 offers an
 `inspect_il2cpp_metadata` follow-up at its admitted file path, including when no
 native library was found. This probe does not establish full metadata validity
 or correspondence to a native binary. See [IL2CPP metadata](il2cpp-metadata.md).
