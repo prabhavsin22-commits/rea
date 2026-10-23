@@ -434,6 +434,18 @@ describe("source to bundle path syntax", () => {
 });
 
 describe("source-map declaration resolution", () => {
+  it("keeps an empty virtual host distinct from a host without a file path", () => {
+    const mapUrl = "file:///artifact/dist/main.js.map";
+    expect(resolveJavaScriptSourceMapUrl("a.js", "webpack://", mapUrl)).toBe(
+      "webpack://a.js",
+    );
+    expect(resolveJavaScriptSourceMapUrl("a.js", "webpack:///", mapUrl)).toBe(
+      "webpack:///a.js",
+    );
+    expect(
+      sourceMapReference("a.js", "webpack:///", "dist/main.js.map").resolution,
+    ).toEqual({ kind: "suffix", path: "a.js" });
+  });
   it.each([
     {
       sourceRoot: "https://cdn.example/src/",

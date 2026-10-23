@@ -39,9 +39,10 @@ const cases = [
     possible: false,
   },
   {
-    name: "require.resolve does not execute its resolved module",
+    name: "require.resolve retains a static lookup association",
     load: 'require.resolve("../shared/window.cjs");',
-    possible: false,
+    // Lookup references retain competing roots without proving runtime execution.
+    possible: true,
   },
   {
     name: "require.main is not an implicit module loader",

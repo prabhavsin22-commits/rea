@@ -30,8 +30,8 @@ it("matches every repeated query occurrence and a distant path coordinate", () =
   expect(selected?.exchange).toBe(retained);
   expect(selected?.exact).toBe(true);
   expect(
-    selectReplayExchange(tool, exchanges, { id: "wanted", q: "hit" })?.exact,
-  ).toBe(false);
+    selectReplayExchange(tool, exchanges, { id: "wanted", q: "hit" }),
+  ).toEqual({ exchange: retained, exact: false });
 });
 
 it("bounds content-type display without changing body interpretation or retained source", () => {

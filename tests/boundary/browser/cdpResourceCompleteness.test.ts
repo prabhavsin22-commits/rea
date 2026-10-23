@@ -144,6 +144,16 @@ const compareResources = (
     }),
   ).dimensions.resources;
 
+const validResourceCases = [
+  {
+    fields: { type: "Other", mimeType: "", contentSize: undefined },
+    size: null,
+  },
+  { fields: { type: "Other", mimeType: "", contentSize: 128 }, size: 128 },
+  { fields: { contentSize: 0 }, size: 0 },
+  { fields: { contentSize: 1.5 }, size: 1.5 },
+];
+
 describe("resource inventory omissions through CDP", () => {
   it.each([
     { fields: { type: undefined }, retained: false },
@@ -194,14 +204,7 @@ describe("resource inventory omissions through CDP", () => {
     },
   );
 
-  it.each([
-    {
-      fields: { type: "Other", mimeType: "", contentSize: undefined },
-      size: null,
-    },
-    { fields: { contentSize: 0 }, size: 0 },
-    { fields: { contentSize: 1.5 }, size: 1.5 },
-  ])(
+  it.each(validResourceCases)(
     "accepts valid optional and empty fields: $fields",
     async ({ fields, size }) => {
       const { state, inspect } = await startBrowser();
@@ -215,7 +218,15 @@ describe("resource inventory omissions through CDP", () => {
       expect(capture.completeness.unavailable_sections).not.toContain(
         "resources",
       );
-      expect(compareResources(capture, capture).status).toBe("unchanged");
+      expect(capture.completeness.excluded).not.toContainEqual(
+        expect.objectContaining({ section: "resources" }),
+      );
+      // Valid optional metadata can leave size unknown even in a complete inventory.
+      expect(compareResources(capture, capture)).toMatchObject({
+        status: size === null ? "unknown" : "unchanged",
+        total_changes: 0,
+        changes: [],
+      });
     },
   );
 

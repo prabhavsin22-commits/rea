@@ -40,6 +40,15 @@ it.each(["require", "require.resolve", "require.main"])(
 );
 
 const imported = "import {createRequire as make} from 'node:module';";
+it("does not reanchor a created loader's alternate URL base to the source file", () => {
+  const analysis = analyzeJavaScriptStaticSource(
+    `${imported}const load=make(new URL('../other/nested/main.cjs',import.meta.url));load('../shared/window.cjs');`,
+  );
+  expect(analysis.parse_error_count).toBe(0);
+  expect(analysis.references.filter(({ kind }) => kind === "require")).toEqual([
+    expect.objectContaining({ kind: "require", specifier: null }),
+  ]);
+});
 it.each([
   [
     "proven factory",

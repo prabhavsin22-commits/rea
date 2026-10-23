@@ -275,7 +275,10 @@ const requireCallSpecifier = (
   if (
     resolveMemberChanged ||
     call.loader === "unknown" ||
-    !call.sourceRelative
+    !call.sourceRelative ||
+    // This projection carries no alternate base. Do not resolve a created
+    // loader's literal against the source file after discarding its URL base.
+    call.sourceRelativePath !== undefined
   ) {
     context.accumulator.unknownFindings += 1;
     return { specifier: undefined };

@@ -90,11 +90,14 @@ describe("ELF note provider failures", () => {
     const projected = projectAnalysisError(error);
     expect(projected.retryable).toBe(false);
     expect(projected.remediation.action).toContain(
-      "ELF note text, hash, and scan budget",
+      "ELF note text, hash, and scan budget fixed by the admitted image length plus decoded section names",
     );
-    expect(projected.remediation.action).toMatch(/admitted image length/u);
+    expect(projected.remediation.action).toMatch(/fixed allowance/u);
     expect(projected.remediation.action).toMatch(/do not raise it/u);
     expect(projected.remediation.action).not.toMatch(/available host memory/u);
+    expect(projected.remediation.action).toMatch(
+      /Repeating the unchanged request fails/u,
+    );
   });
 
   it("keeps a caller file-size budget distinct from host memory", async () => {

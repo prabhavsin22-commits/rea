@@ -91,7 +91,7 @@ cliTest("reports a truncated PE as invalid input", async ({ cli }) => {
 });
 
 cliTest(
-  "rejects TeletexString names without returning corrupted identity text",
+  "reports TeletexString compatibility names and their decoding limitation",
   async ({ cli }) => {
     const root = await createTestTempDirectory("rea-pe-cert-cli-teletex-");
     const path = join(root, "teletex.exe");
@@ -104,6 +104,40 @@ cliTest(
     const result = await cli.run({
       arguments: ["inspect-pe-certificates", path, "--json"],
     });
+    expect(result.exitCode, result.stderr).toBe(0);
+    const evidence = toolContract("inspect_pe_certificates").outputSchema.parse(
+      result.json,
+    );
+    const report = evidence.normalized_result;
+    expect(report.entries[0]?.pkcs7?.certificates[0]).toMatchObject({
+      serial_hex: "11223344",
+      issuer: {
+        text: "commonName=\u00c2e, organizationName=REA Tests",
+        attributes: expect.arrayContaining([
+          { oid: "2.5.4.3", oid_name: "commonName", value: "\u00c2e" },
+        ]),
+      },
+      subject: { text: "commonName=é, organizationName=REA Tests" },
+    });
+    expect(report.limitations).toContain(
+      "TeletexString values use OpenSSL's ISO-8859-1 compatibility mapping; this is not a full T.61 decoder.",
+    );
+  },
+);
+
+cliTest(
+  "rejects unsupported GeneralString certificate names",
+  async ({ cli }) => {
+    const root = await createTestTempDirectory("rea-pe-cert-cli-general-");
+    const path = join(root, "general.exe");
+    const payload = pkcs7SignedDataFixture("é");
+    const nameAt = payload.indexOf(Buffer.from([0x0c, 0x02, 0xc3, 0xa9]));
+    expect(nameAt).toBeGreaterThanOrEqual(0);
+    payload[nameAt] = 0x1b;
+    await writeFile(path, peCertificateFixture(false, payload));
+    const result = await cli.run({
+      arguments: ["inspect-pe-certificates", path, "--json"],
+    });
     expect(result.exitCode).toBe(1);
     expect(result.json).toMatchObject({
       code: "invalid_request",
@@ -112,7 +146,7 @@ cliTest(
         issues: [
           {
             message: expect.stringContaining(
-              "Unsupported certificate name encoding (DER tag 0x14)",
+              "Unsupported certificate name encoding (DER tag 0x1b)",
             ),
           },
         ],

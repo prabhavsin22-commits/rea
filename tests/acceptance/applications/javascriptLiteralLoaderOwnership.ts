@@ -318,10 +318,24 @@ const expectCompetingLoaderGraph = (
     "blocked alias",
     "local module",
     "projected module",
-    "resolve-only",
     "missing wildcard alias",
     "earlier reassigned module alias",
   ].includes(loader);
+  if (loader === "resolve-only")
+    // A lookup association is a possible owner, not proof of executing the module.
+    // Preserve the lookup edge and report competing page ownership as unavailable.
+    expect(graph.edges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          relation: "imports",
+          properties: expect.objectContaining({
+            kind: "require",
+            specifier: "../shared/window.cjs",
+            resolved_path: "shared/window.cjs",
+          }),
+        }),
+      ]),
+    );
   if (loader.startsWith("Windows "))
     expect(graph.edges).toEqual(
       expect.arrayContaining([
