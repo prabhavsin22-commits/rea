@@ -364,3 +364,29 @@ it.each([null, { caller: "opaque ZIP interruption" }])(
     }
   },
 );
+
+it.each([
+  ["0120000", 0o120000],
+  ["0120777", 0o120777],
+] as const)(
+  "reports a ZIP symlink declared with Unix mode %s as a symlink",
+  async (_label, mode) => {
+    const directory = await createTestTempDirectory("rea-zip-symlink-mode-");
+    const path = join(directory, "link.zip");
+    const writer = new ZipWriter(new Uint8ArrayWriter(), {
+      msDosCompatible: false,
+      versionMadeBy: 0x0314,
+      externalFileAttributes: mode * 0x10000,
+    });
+    await writer.add("link", new TextReader("target"));
+    await writeFile(path, await writer.close());
+    const reader = new ZipArtifactReader(path, "zip");
+    try {
+      const entries = [];
+      for await (const entry of reader.entries()) entries.push(entry);
+      expect(entries).toMatchObject([{ path: "link", kind: "symlink" }]);
+    } finally {
+      await reader.close();
+    }
+  },
+);

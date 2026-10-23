@@ -472,8 +472,9 @@ async function* typedZipFailures<T>(
   }
 }
 
-const isSymlink = (entry: Entry): boolean =>
-  entry.unixMode !== undefined && (entry.unixMode & 0o170000) === 0o120000;
+// zip.js derives the type from the upper external attributes even when it
+// leaves the optional unixMode unset (a symlink mode with no permission bits).
+const isSymlink = (entry: Entry): boolean => entry.symlink;
 
 const toError = (cause: unknown): Error =>
   cause instanceof Error ? cause : new Error("ZIP extraction failed");
