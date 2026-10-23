@@ -25,7 +25,12 @@ const attempt = <T>(read: () => T): T | null => {
 
 /** Identity is the raw-DER fingerprint; parsed X.509 facts are null when unreadable. */
 export const certificateFacts = (der: Uint8Array): Certificate => {
-  const cert = attempt(() => new X509Certificate(Buffer.from(der)));
+  // Node auto-detects PEM before DER, including PEM text inside DER extensions.
+  // Explicit outer framing binds every parsed fact to the carried bytes.
+  const pem = `-----BEGIN CERTIFICATE-----
+${Buffer.from(der).toString("base64")}
+-----END CERTIFICATE-----`;
+  const cert = attempt(() => new X509Certificate(pem));
   return {
     sha256_fingerprint: derFingerprint(der),
     subject: cert?.subject ?? null,
