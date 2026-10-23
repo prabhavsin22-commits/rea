@@ -12,6 +12,8 @@ import {
   withClientServers,
   type ClientConfigurationDocument,
 } from "./ClientConfigurationDocument.js";
+import { CordisYamlSyntaxError } from "./DshCordisYaml.js";
+import { ConfigurationError } from "../domain/configurationErrors.js";
 import { err, ok, type Result } from "../domain/result.js";
 import { copyFile, lstat, realpath, rm, rmdir } from "node:fs/promises";
 import { constants as fsConstants } from "node:fs";
@@ -446,7 +448,11 @@ const readClientConfiguration = async (
       item(
         client.name,
         "failed",
-        cause instanceof ClientConfigurationShapeError
+        // Valid documents keep their specific refusal (for example an
+        // expression-backed Cordis ID); only syntax failures read as invalid.
+        cause instanceof ClientConfigurationShapeError ||
+          (cause instanceof ConfigurationError &&
+            !(cause instanceof CordisYamlSyntaxError))
           ? `Configuration was not changed: ${cause.message}. Repair it, then rerun uninstall.`
           : `Configuration is not valid ${client.format === "toml" || client.format === "grok" ? "TOML" : client.format === "opencode" ? "JSONC" : client.format === "hermes" || client.format === "dsh" ? "YAML" : "JSON"} and was not changed. Repair it, then rerun uninstall.`,
       ),

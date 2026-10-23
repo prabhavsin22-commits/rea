@@ -20,7 +20,10 @@ import {
   clientSkillDirectories,
   supportedClients,
 } from "../../../src/application/SupportedClients.js";
-import { systemUninstallHost } from "../../../src/application/Uninstall.js";
+import {
+  runUninstall,
+  systemUninstallHost,
+} from "../../../src/application/Uninstall.js";
 import { createTestTempDirectory } from "../../fixtures/temporaryDirectory.js";
 import { clearClientLocationEnvironment } from "../../fixtures/clientEnvironment.js";
 
@@ -577,6 +580,46 @@ describe("DeepSeek Harness expression-backed structure", () => {
       ).rejects.toMatchObject({ code: "ENOENT" });
     },
   );
+});
+
+describe("DeepSeek Harness uninstall diagnostics", () => {
+  it.each([
+    {
+      name: "an expression-backed ID",
+      id: `!!js 'process.env.DSH_PROFILE ? "rea-mcp" : "other"'`,
+      detail:
+        "Configuration was not changed: Expression-backed Cordis IDs have unknown ownership; use literal IDs before changing registrations. Repair it, then rerun uninstall.",
+    },
+    {
+      name: "invalid YAML",
+      id: "[unterminated",
+      detail:
+        "Configuration is not valid YAML and was not changed. Repair it, then rerun uninstall.",
+    },
+  ])("keeps the refusal reason for $name", async ({ id, detail }) => {
+    const { home, client } = await harnessClient();
+    const initial = `- insert:
+    - id: ${id}
+      name: "@deepseek-ai/dsh-mcp-client"
+      config:
+        serverName: rea
+        transport: stdio
+        command: ${command[0]}
+        args: [${command.slice(1).join(", ")}]
+`;
+    await writeFile(client.configPath, initial);
+
+    const result = await runUninstall(false, systemUninstallHost(home));
+
+    expect(result.status).toBe("failed");
+    expect(result.items).toContainEqual(
+      expect.objectContaining({ name: "dsh", status: "failed", detail }),
+    );
+    expect(await readFile(client.configPath, "utf8")).toBe(initial);
+    await expect(
+      readFile(`${client.configPath}.rea.backup`, "utf8"),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+  });
 });
 
 describe("DeepSeek Harness registration state", () => {

@@ -14,6 +14,9 @@ import {
 } from "yaml";
 import { ConfigurationError } from "../domain/configurationErrors.js";
 
+/** The patch text is not YAML REA can read, unlike valid YAML whose content REA refuses. */
+export class CordisYamlSyntaxError extends ConfigurationError {}
+
 /** Expression source is never a literal value and is never evaluated by REA. */
 export class CordisExpression {
   readonly kind = "cordis-expression";
@@ -34,7 +37,7 @@ export class DshCordisYaml {
       logLevel: "silent",
     });
     if (this.document.errors.length > 0 || this.document.warnings.length > 0)
-      throw new ConfigurationError("Invalid or unsupported Cordis YAML", {
+      throw new CordisYamlSyntaxError("Invalid or unsupported Cordis YAML", {
         cause: this.document.errors[0] ?? this.document.warnings[0],
       });
     if (this.document.contents === null)
