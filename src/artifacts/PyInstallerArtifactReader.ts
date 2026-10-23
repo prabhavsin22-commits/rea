@@ -31,6 +31,7 @@ import { abortIfNeeded, hashReadable } from "./ArtifactHash.js";
 import { readArtifactFileChunks } from "./readArtifactFileChunks.js";
 import { ArtifactResourceScope } from "./ArtifactResourceScope.js";
 import { artifactIntegrityDetails } from "../domain/artifactIntegrity.js";
+import { readPyInstallerBytes } from "./pyinstaller/PyInstallerBytes.js";
 import { PyInstallerPyzStore } from "./pyinstaller/PyInstallerPyzStore.js";
 import { pyInstallerMemberStream } from "./pyinstaller/PyInstallerMemberStream.js";
 import {
@@ -314,16 +315,20 @@ export class PyInstallerArtifactReader implements ArtifactReader {
       [...images.values()].map((image) => image.archive),
     );
     const encrypted = hasEncryptionMarker(toc);
-    const carrier = Buffer.alloc(2);
-    await handle.read(carrier, 0, 2, 0);
-    abortIfNeeded(signal);
+    const carrier = await readPyInstallerBytes(handle, {
+      position: 0,
+      length: 2,
+      label: "PyInstaller carrier magic",
+      signal,
+    });
+    if (!carrier.ok) throw failure(carrier.error);
     const members = await this.#project(
       toc,
       cookie,
       images,
       magic,
       encrypted,
-      !carrier.equals(Buffer.from("MZ")),
+      !carrier.value.equals(Buffer.from("MZ")),
       signal,
     );
     for (const member of members)

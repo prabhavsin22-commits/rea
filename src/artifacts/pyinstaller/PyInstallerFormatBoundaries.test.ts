@@ -1055,6 +1055,40 @@ it("fills successful short reads through actual classification, TOCs and selecte
   });
 });
 
+it("fills the carrier magic across short reads before deciding executable marking", async () => {
+  const bytes = cArchiveExecutable({
+    layout: "2.1",
+    pythonVersion: 309,
+    carrier: Buffer.concat([Buffer.from("MZ"), Buffer.alloc(62)]),
+    members: [
+      {
+        name: "helper.dll",
+        typeCode: "b",
+        compress: false,
+        payload: Buffer.from("MZ"),
+      },
+    ],
+  });
+  await withPyInstallerReader(bytes, async (reader, handle) => {
+    const read = handle.read;
+    const spy = vi
+      .spyOn(Object.getPrototypeOf(handle), "read")
+      .mockImplementation(function (this: unknown, ...args: unknown[]) {
+        if (typeof args[2] === "number" && args[2] > 1) args[2] = 1;
+        return Reflect.apply(read, this, args);
+      });
+    try {
+      const listed = [];
+      for await (const entry of reader.entries()) listed.push(entry);
+      expect(listed.find((entry) => entry.path === "helper.dll")).toMatchObject(
+        { executable: false },
+      );
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
 it("distinguishes actual EOF after a short PYZ header read", async () => {
   const bytes = pyzArchive({ magic: PYTHON_39_MAGIC, modules: [] });
   await withPyInstallerReader(bytes, async (_reader, handle) => {
