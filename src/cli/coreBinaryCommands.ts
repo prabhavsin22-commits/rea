@@ -18,6 +18,32 @@ import { javascriptApplicationOptions } from "../cliObservationOptions.js";
 import { AnalysisInputError } from "../domain/analysisErrorCore.js";
 import { absoluteCallerPath } from "../filesystem/callerPath.js";
 
+/**
+ * Args and options are advertised as separate schemas, so each alternative
+ * stays optional. Say which choice is required where discovery reads it.
+ */
+const requiredSelectorGuidance = (
+  alternatives: string,
+  agreement = "Equal positional and named values are accepted; conflicting values fail.",
+): string => [`Supply at least one of ${alternatives}.`, agreement].join(" ");
+
+const addressOrProcedureGuidance = requiredSelectorGuidance(
+  "the positional address or --procedure",
+);
+const decompileSelectorGuidance = requiredSelectorGuidance(
+  "the positional address, --procedure, or --file-offset",
+  "Equal positional and --procedure values are accepted; conflicting values fail. --file-offset is a source-file offset, not an analysis address, so use it without another selector.",
+);
+const namedAddressGuidance = requiredSelectorGuidance(
+  "the positional address or --address",
+);
+const querySelectorGuidance = requiredSelectorGuidance(
+  "the positional query or --query",
+);
+const patternSelectorGuidance = requiredSelectorGuidance(
+  "the positional pattern or --pattern",
+);
+
 /** Register provider-neutral binary overview and procedure CLI commands. */
 export const registerCoreBinaryCommands = (
   cli: CliInstance,
@@ -155,14 +181,14 @@ const registerDecompileCommand = (
   runDirectAnalysis: DirectAnalysis["runDirectAnalysis"],
 ): void => {
   cli.command(CLI_COMMANDS.decompile, {
-    description: "Read one part of an app as code",
+    description: `Read one part of an app as code. ${decompileSelectorGuidance}`,
     args: z.object({
       path: z.string().describe("App or program path"),
       address: z
         .string()
         .min(1)
         .optional()
-        .describe("Procedure name or address"),
+        .describe(`Procedure name or address. ${decompileSelectorGuidance}`),
     }),
     options: z.object({
       procedure: z
@@ -170,14 +196,14 @@ const registerDecompileCommand = (
         .min(1)
         .optional()
         .describe(
-          "Procedure name or address; use --procedure=<value> for leading dashes",
+          `Procedure name or address; use --procedure=<value> for leading dashes. ${decompileSelectorGuidance}`,
         ),
       "file-offset": z
         .string()
         .regex(/^0x[0-9a-fA-F]+$/u)
         .optional()
         .describe(
-          "Ghidra source-file byte offset; mapped internally to an analysis address",
+          `Ghidra source-file byte offset; mapped internally to an analysis address. ${decompileSelectorGuidance}`,
         ),
       snapshot: snapshotSelectionOption,
       ...nativeOpenOptionFields,
@@ -249,10 +275,14 @@ const registerXrefsCommand = (
   runDirectAnalysis: DirectAnalysis["runDirectAnalysis"],
 ): void => {
   cli.command(CLI_COMMANDS.xrefs, {
-    description: "List bounded references to an analyzed address",
+    description: `List bounded references to an analyzed address. ${namedAddressGuidance}`,
     args: z.object({
       path: z.string().describe("App or program path"),
-      address: z.string().min(1).optional().describe("Address or symbol name"),
+      address: z
+        .string()
+        .min(1)
+        .optional()
+        .describe(`Address or symbol name. ${namedAddressGuidance}`),
     }),
     options: z.object({
       address: z
@@ -260,7 +290,7 @@ const registerXrefsCommand = (
         .min(1)
         .optional()
         .describe(
-          "Address or symbol name; use --address=<value> for leading dashes",
+          `Address or symbol name; use --address=<value> for leading dashes. ${namedAddressGuidance}`,
         ),
       snapshot: snapshotSelectionOption,
       ...nativeOpenOptionFields,
@@ -290,10 +320,14 @@ const registerTraceCommand = (
   runDirectAnalysis: DirectAnalysis["runDirectAnalysis"],
 ): void => {
   cli.command(CLI_COMMANDS.trace, {
-    description: "Trace a literal feature through analyzed references",
+    description: `Trace a literal feature through analyzed references. ${querySelectorGuidance}`,
     args: z.object({
       path: z.string().describe("App or program path"),
-      query: z.string().min(1).optional().describe("Literal feature query"),
+      query: z
+        .string()
+        .min(1)
+        .optional()
+        .describe(`Literal feature query. ${querySelectorGuidance}`),
     }),
     options: z.object({
       query: z
@@ -301,7 +335,7 @@ const registerTraceCommand = (
         .min(1)
         .optional()
         .describe(
-          "Complete literal feature query; use --query=<value> for leading dashes",
+          `Complete literal feature query; use --query=<value> for leading dashes. ${querySelectorGuidance}`,
         ),
       caseSensitive: z
         .boolean()
@@ -336,14 +370,14 @@ const registerFunctionCommand = (
   runDirectAnalysis: DirectAnalysis["runDirectAnalysis"],
 ): void => {
   cli.command(CLI_COMMANDS.function, {
-    description: "Analyze one complete function with evidence",
+    description: `Analyze one complete function with evidence. ${addressOrProcedureGuidance}`,
     args: z.object({
       path: z.string().describe("App or program path"),
       address: z
         .string()
         .min(1)
         .optional()
-        .describe("Procedure name or address"),
+        .describe(`Procedure name or address. ${addressOrProcedureGuidance}`),
     }),
     options: z.object({
       procedure: z
@@ -351,7 +385,7 @@ const registerFunctionCommand = (
         .min(1)
         .optional()
         .describe(
-          "Procedure name or address; use --procedure=<value> for leading dashes",
+          `Procedure name or address; use --procedure=<value> for leading dashes. ${addressOrProcedureGuidance}`,
         ),
       snapshot: snapshotSelectionOption,
       ...nativeOpenOptionFields,
@@ -381,14 +415,14 @@ const registerInstructionsCommand = (
   runDirectAnalysis: DirectAnalysis["runDirectAnalysis"],
 ): void => {
   cli.command(CLI_COMMANDS.instructions, {
-    description: "Read every raw instruction without decompiling",
+    description: `Read every raw instruction without decompiling. ${addressOrProcedureGuidance}`,
     args: z.object({
       path: z.string().describe("App or program path"),
       address: z
         .string()
         .min(1)
         .optional()
-        .describe("Procedure name or address"),
+        .describe(`Procedure name or address. ${addressOrProcedureGuidance}`),
     }),
     options: z.object({
       procedure: z
@@ -396,7 +430,7 @@ const registerInstructionsCommand = (
         .min(1)
         .optional()
         .describe(
-          "Procedure name or address; use --procedure=<value> for leading dashes",
+          `Procedure name or address; use --procedure=<value> for leading dashes. ${addressOrProcedureGuidance}`,
         ),
       snapshot: snapshotSelectionOption,
       ...nativeOpenOptionFields,
@@ -426,14 +460,14 @@ const registerSearchCommand = (
   runDirectAnalysis: DirectAnalysis["runDirectAnalysis"],
 ): void => {
   cli.command(CLI_COMMANDS.search, {
-    description: "Search every analyzed string or procedure name",
+    description: `Search every analyzed string or procedure name. ${patternSelectorGuidance}`,
     args: z.object({
       path: z.string().describe("App or program path"),
       pattern: z
         .string()
         .min(1)
         .optional()
-        .describe("Literal text or regex pattern"),
+        .describe(`Literal text or regex pattern. ${patternSelectorGuidance}`),
     }),
     options: z.object({
       pattern: z
@@ -441,7 +475,7 @@ const registerSearchCommand = (
         .min(1)
         .optional()
         .describe(
-          "Complete literal text or regex pattern; use --pattern=<value> for leading dashes",
+          `Complete literal text or regex pattern; use --pattern=<value> for leading dashes. ${patternSelectorGuidance}`,
         ),
       kind: z
         .enum(["strings", "procedures"])
