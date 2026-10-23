@@ -32,6 +32,8 @@ import {
   artifactFileCompletion,
   assertArtifactReadActive,
   artifactFileCancellationCause,
+  artifactSelectedPathErrno,
+  type ArtifactSelectedPathErrno,
 } from "../../artifacts/ArtifactFileOperation.js";
 import { analysisErrorWithCleanupFailure } from "../../domain/analysisErrorCleanup.js";
 import { ArtifactReaderFailure } from "../../artifacts/ArtifactReader.js";
@@ -45,10 +47,20 @@ const ZERO_SIZE_LIMITATION =
   "The file reports a size of 0, so no bytes were read. Generated files such as Linux /proc entries can report 0 while holding content; this result does not show that the file is empty.";
 
 const OPERATION = "inspect_byte_entropy";
-const invalid = (field: string, message: string) =>
-  new AnalysisInputError(OPERATION, undefined, [
-    { path: [field], reason: "invalid_value", message },
-  ]);
+const selectedPathMessage: Record<ArtifactSelectedPathErrno, string> = {
+  ENOENT: "Selected file could not be found.",
+  ENOTDIR: "Selected file could not be found.",
+  ELOOP:
+    "Selected path's symbolic links loop or exceed the host limit (ELOOP).",
+  ENAMETOOLONG:
+    "Selected path exceeds the host path or component length limit (ENAMETOOLONG).",
+};
+const invalid = (field: string, message: string, cause?: unknown) =>
+  new AnalysisInputError(
+    OPERATION,
+    cause === undefined ? undefined : { cause },
+    [{ path: [field], reason: "invalid_value", message }],
+  );
 
 /** Offline byte observations shared by CLI and MCP, with one file-wide read. */
 export class ByteEntropyService {
@@ -149,7 +161,8 @@ export class ByteEntropyService {
             cause.code,
             { cause },
           );
-        if (cause.code === "ENOENT" || cause.code === "ENOTDIR")
+        const pathErrno = artifactSelectedPathErrno(cause);
+        if (pathErrno !== undefined)
           return admitted
             ? new AnalysisArtifactChangedError(
                 OPERATION,
@@ -157,7 +170,7 @@ export class ByteEntropyService {
                 "Selected file path changed during entropy inspection.",
                 { cause },
               )
-            : invalid("path", "Selected file could not be found.");
+            : invalid("path", selectedPathMessage[pathErrno], cause);
       }
       return new AnalysisOutputError(
         OPERATION,

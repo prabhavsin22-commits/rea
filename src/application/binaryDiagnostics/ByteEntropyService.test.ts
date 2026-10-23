@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { open, stat, rename, writeFile } from "node:fs/promises";
+import { open, stat, rename, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, it, vi } from "vitest";
 import { createTestTempDirectory } from "../../../tests/fixtures/temporaryDirectory.js";
@@ -68,6 +68,36 @@ it("rejects missing files, non-files and windows beyond EOF, but accepts empty w
     byteEntropySchema.parse(result.value.normalized_result).limitations,
   ).toContainEqual(expect.stringContaining("reports a size of 0"));
 });
+
+it.skipIf(process.platform === "win32")(
+  "reports symlink loops and overlong path components as path input errors",
+  async () => {
+    const root = await createTestTempDirectory("rea-entropy-path-");
+    await symlink("loop", join(root, "loop"));
+    for (const [name, code] of [
+      ["loop", "ELOOP"],
+      ["x".repeat(256), "ENAMETOOLONG"],
+    ] as const) {
+      const result = await new ByteEntropyService().inspect({
+        path: join(root, name),
+      });
+      if (result.ok) throw new Error(`Expected ${code} to fail`);
+      expect(result.error.cause).toMatchObject({ code, syscall: "stat" });
+      expect(projectAnalysisError(result.error)).toMatchObject({
+        code: "invalid_request",
+        details: {
+          issues: [
+            {
+              path: ["path"],
+              reason: "invalid_value",
+              message: expect.stringContaining(code),
+            },
+          ],
+        },
+      });
+    }
+  },
+);
 
 it.each([
   [{ offset: 2048 }, "offset"],
