@@ -28,12 +28,45 @@ import {
   type SourceLimitation,
 } from "./SourceLimitations.js";
 
+/**
+ * Bound for caveats a workflow observes once per item. Provider caveats can
+ * name per-item addresses, so they do not deduplicate and would otherwise grow
+ * with the number of items.
+ */
+export interface ComposedLimitationBudget {
+  /** Operations the workflow calls once per item. */
+  readonly perItemOperations: ReadonlySet<AnalysisOperation>;
+  /**
+   * First distinct per-item caveats retained, grouped by provider and text.
+   * Kept lines are rendered in the usual sorted order.
+   */
+  readonly maxDistinct: number;
+  /** Total retained caveat text in UTF-16 code units; defaults to 8,000. */
+  readonly maxCharacters?: number;
+  /** Where the omitted per-item caveats remain, as a clause. */
+  readonly retainedIn: string;
+}
+
+const DECOMPILE_ALL_LIMITATIONS: ComposedLimitationBudget = {
+  perItemOperations: new Set(["procedure_info", "procedure_pseudo_code"]),
+  maxDistinct: 8,
+  retainedIn:
+    "each function's record in decompile-index.json keeps the caveats of the observations it used",
+};
+
+/** The caveat budget for a composed workflow, when it has one. */
+export const composedLimitationBudget = (
+  operation: string,
+): ComposedLimitationBudget | undefined =>
+  operation === "decompile_all" ? DECOMPILE_ALL_LIMITATIONS : undefined;
+
 /** Retain the limits of exactly the observations used by one composed call. */
 export const executeComposedWorkflow = async (
   analysis: AnalysisOperationPort,
   execute: (
     observed: AnalysisOperationPort,
   ) => Promise<Result<JsonValue, AnalysisError>>,
+  budget?: ComposedLimitationBudget,
 ): Promise<
   Result<
     {
@@ -45,8 +78,12 @@ export const executeComposedWorkflow = async (
   >
 > => {
   const limitations = new Map<string, SourceLimitation>();
+  const perItemGroups = new Set<string>();
+  let perItemCharacters = 0;
+  let omittedObservations = 0;
   let cachePolicy: "live" | undefined;
   const result = await execute({
+    resourceScope: analysis.resourceScope,
     execute: async (operation, parameters, options) => {
       const execution = await analysis.execute(operation, parameters, options);
       if (execution.ok && execution.value.cachePolicy === "live")
@@ -58,6 +95,32 @@ export const executeComposedWorkflow = async (
             operation,
             limitation,
           } satisfies SourceLimitation;
+          if (budget?.perItemOperations.has(operation) === true) {
+            // Reject oversized text before allocating a grouping key. Complete
+            // caveats are already retained by the export's per-function owner.
+            const maxCharacters = budget.maxCharacters ?? 8_000;
+            if (limitation.length > maxCharacters) {
+              omittedObservations += 1;
+              continue;
+            }
+            const group = JSON.stringify([
+              fact.provider.id,
+              fact.provider.name,
+              fact.provider.version,
+              limitation,
+            ]);
+            if (!perItemGroups.has(group)) {
+              if (
+                perItemGroups.size >= budget.maxDistinct ||
+                perItemCharacters + limitation.length > maxCharacters
+              ) {
+                omittedObservations += 1;
+                continue;
+              }
+              perItemGroups.add(group);
+              perItemCharacters += limitation.length;
+            }
+          }
           limitations.set(sourceLimitationKey(fact), fact);
         }
       return execution;
@@ -66,7 +129,14 @@ export const executeComposedWorkflow = async (
   if (!result.ok) return result;
   return ok({
     result: result.value,
-    limitations: renderSourceLimitations([...limitations.values()]),
+    limitations: [
+      ...renderSourceLimitations([...limitations.values()]),
+      ...(omittedObservations === 0
+        ? []
+        : [
+            `${omittedObservations} per-item provider limitation observation${omittedObservations === 1 ? " was" : "s were"} omitted from this answer; ${budget?.retainedIn}.`,
+          ]),
+    ],
     ...(cachePolicy === undefined ? {} : { cachePolicy }),
   });
 };
