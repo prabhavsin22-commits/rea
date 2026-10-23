@@ -19,7 +19,24 @@ export const createHarValidator = (): ((
   if (typeof plugin !== "function")
     throw new Error("Pinned AJV formats plugin is unavailable");
   plugin(ajv);
-  for (const schema of Object.values(schemas)) ajv.addSchema(schema);
+  ajv.addKeyword({
+    keyword: "min",
+    type: "number",
+    schemaType: "number",
+    validate: (schema: number, data: unknown) =>
+      typeof data === "number" && data >= schema,
+    error: {
+      message: (cxt) => `must be >= ${cxt.schema}`,
+    },
+  });
+  for (const schema of Object.values(schemas)) {
+    const normalized =
+      (schema.properties !== undefined || schema.required !== undefined) &&
+      schema.type === undefined
+        ? { type: "object", ...schema }
+        : schema;
+    ajv.addSchema(normalized);
+  }
   const validate = ajv.getSchema("har.json#");
   if (validate === undefined)
     throw new Error("Pinned HAR root schema is unavailable");

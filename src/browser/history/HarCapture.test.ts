@@ -4,6 +4,7 @@ import {
   historicalHar,
   harWithContainerLookalikes,
 } from "../../../tests/fixtures/historicalHar.js";
+import { CaptureFormatError } from "./CaptureFormatError.js";
 import { decodeCaptureText } from "./CaptureJson.js";
 import { decodeHarCapture } from "./HarCapture.js";
 
@@ -836,3 +837,69 @@ it.each([
     );
   },
 );
+
+it.each([
+  {
+    name: "rejects null timings object (#6890)",
+    edit: (entry: Record<string, unknown>) => {
+      entry.timings = null;
+    },
+    error: "HAR schema validation failed: type (must be object).",
+    pointer: "/log/entries/0/timings",
+  },
+  {
+    name: "rejects null cache object (#6890)",
+    edit: (entry: Record<string, unknown>) => {
+      entry.cache = null;
+    },
+    error: "HAR schema validation failed: type (must be object).",
+    pointer: "/log/entries/0/cache",
+  },
+  {
+    name: "rejects negative wait timing (#6890)",
+    edit: (entry: Record<string, unknown>) => {
+      (entry.timings as Record<string, unknown>).wait = -2;
+    },
+    error: "HAR schema validation failed: min (must be >= -1).",
+    pointer: "/log/entries/0/timings/wait",
+  },
+  {
+    name: "rejects negative send timing (#6890)",
+    edit: (entry: Record<string, unknown>) => {
+      (entry.timings as Record<string, unknown>).send = -2;
+    },
+    error: "HAR schema validation failed: min (must be >= -1).",
+    pointer: "/log/entries/0/timings/send",
+  },
+  {
+    name: "rejects negative receive timing (#6890)",
+    edit: (entry: Record<string, unknown>) => {
+      (entry.timings as Record<string, unknown>).receive = -2;
+    },
+    error: "HAR schema validation failed: min (must be >= -1).",
+    pointer: "/log/entries/0/timings/receive",
+  },
+  {
+    name: "rejects negative entry time (#6890)",
+    edit: (entry: Record<string, unknown>) => {
+      entry.time = -1;
+    },
+    error: "HAR schema validation failed: min (must be >= 0).",
+    pointer: "/log/entries/0/time",
+  },
+])("$name", ({ edit, error, pointer }) => {
+  const fixture = historicalHar();
+  const entry = fixture.log.entries[0];
+  if (entry === undefined) throw new Error("fixture missing entry");
+  edit(entry as unknown as Record<string, unknown>);
+  try {
+    decodeHarCapture(JSON.stringify(fixture), []);
+    expect.unreachable("expected validation error");
+  } catch (cause) {
+    expect(cause).toBeInstanceOf(CaptureFormatError);
+    const formatError = cause as CaptureFormatError;
+    expect(formatError.reason).toBe("format");
+    expect(formatError.message).toBe(error);
+    expect(formatError.pointer).toBe(pointer);
+  }
+});
