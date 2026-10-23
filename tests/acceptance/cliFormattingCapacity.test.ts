@@ -8,8 +8,10 @@ import { buildManagedPeFixture } from "../../src/dotnet/ManagedPe.fixture.js";
 import { analysisErrorProjectionSchema } from "../../src/contracts/errorSchemas.js";
 import { workspaceCliTest } from "../support/cli/workspaceCliFixture.js";
 
-// Exercise the real dispatcher and pinned formatter with an authored capacity
-// failure. No engine-sized document or native target execution is needed.
+// Exercise the real dispatcher with an authored capacity failure at each owner:
+// REA formats Markdown; Incur still formats delegated human output. Locate the
+// owning functions in the emitted syntax, including REA's bundled runtime.
+// No engine-sized document or native target execution is needed.
 const formatterFailure = `
   if (fmt !== "json" && fmt !== "jsonl" &&
       (value?.operation === "inspect_managed_artifact" ||
@@ -22,14 +24,51 @@ const formatterFailure = `
 `;
 const formatterCapacityHook = `data:text/javascript,${encodeURIComponent(`
 import { registerHooks } from "node:module";
+import { parse } from ${JSON.stringify(import.meta.resolve("@babel/parser"))};
 registerHooks({
   load(url, context, next) {
+    const pathname = new URL(url).pathname;
+    const name = pathname.endsWith("/incur/dist/Formatter.js")
+      ? "format"
+      : pathname.includes("/dist/cli-runtime/")
+        ? "formatCliOutput"
+        : undefined;
     const loaded = next(url, context);
-    if (!url.endsWith("/incur/dist/Formatter.js")) return loaded;
+    if (name === undefined) return loaded;
     const source = String(loaded.source);
-    const signature = "export function format(value, fmt = 'toon') {";
-    if (!source.includes(signature)) throw new Error("Pinned formatter boundary changed");
-    return { ...loaded, source: source.replace(signature, signature + ${JSON.stringify(formatterFailure)}) };
+    if (!source.includes(name)) return loaded;
+    const functions = [];
+    const visit = (node) => {
+      if (node === null || typeof node !== "object") return;
+      if (node.type === "FunctionDeclaration" && node.id?.name === name)
+        functions.push(node);
+      if (node.type === "AssignmentExpression" &&
+          node.left.type === "Identifier" && node.left.name === name &&
+          node.right.type === "ArrowFunctionExpression")
+        functions.push(node.right);
+      for (const child of Object.values(node)) {
+        if (Array.isArray(child)) child.forEach(visit);
+        else visit(child);
+      }
+    };
+    visit(parse(source, { sourceType: "module" }).program);
+    if (functions.length === 0) return loaded;
+    if (functions.length !== 1) throw new Error("Ambiguous formatter owner: " + name);
+    const fn = functions[0];
+    const parameters = fn.params.map((parameter) =>
+      parameter.type === "AssignmentPattern" ? parameter.left : parameter);
+    if (parameters.length !== 2 || parameters.some((parameter) => parameter.type !== "Identifier"))
+      throw new Error("Formatter parameter boundary changed: " + name);
+    const failure = "((value, fmt) => {" + ${JSON.stringify(formatterFailure)} +
+      "})(" + parameters.map((parameter) => parameter.name).join(",") + ");";
+    const body = fn.body;
+    const replacement = body.type === "BlockStatement"
+      ? "{" + failure + source.slice(body.start + 1, body.end)
+      : "{" + failure + "return (" + source.slice(body.start, body.end) + ");}";
+    return {
+      ...loaded,
+      source: source.slice(0, body.start) + replacement + source.slice(body.end),
+    };
   },
 });
 `)}`;
