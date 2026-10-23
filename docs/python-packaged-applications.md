@@ -18,9 +18,12 @@ path rules; the source name retains its spelling, including backslashes.
 the decoded PYZ image for PYZ rows. A CArchive directory record starts at
 `archive_start + toc_offset + directory_record_offset`; its size is
 `directory_record_size`. PYZ row directory extents remain unknown.
-CArchive type `b` retains PyInstaller's executable-member declaration in the
-generic `executable` fact; type `x` remains non-executable. This comes from the
-archive type code, not the filename or member contents.
+In a POSIX (ELF or Mach-O) carrier, CArchive type `b` retains PyInstaller's
+executable-member declaration in the generic `executable` fact; type `x`
+remains non-executable. A PE carrier's Windows bootloader sets no execute bit,
+so its type `b` members, usually DLLs and `.pyd` extensions, stay
+non-executable. This comes from the carrier's `MZ` signature and the archive
+type code, not the filename or member contents.
 Distinct CArchive rows retain their table-index identities even when they
 share a logical path. Inventory can preserve both a file and a decoded PYZ
 directory at that path, including the PYZ children; extraction refuses a
