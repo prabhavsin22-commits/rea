@@ -14,10 +14,10 @@ import { jsonValueSchema } from "../../../src/domain/jsonValue.js";
 import { createTestBinarySession } from "../../fixtures/binarySession.js";
 import { FUNCTION_COMPARISON_EXAMPLE } from "../../../src/contracts/functionComparisonExample.js";
 import { createEvidence, parseEvidence } from "../../../src/domain/evidence.js";
+import { functionDossierSchema } from "../../../src/domain/hopperValues.js";
 import { createServer } from "../../../src/server/createServer.js";
 import { observed } from "../../fixtures/analysisExecution.js";
 import { reconstructionVerificationResultSchema } from "../../../src/domain/reconstructionVerificationSchemas.js";
-import { functionDossierSchema } from "../../../src/domain/hopperValues.js";
 
 it.each([
   { leftSpace: "ram", rightSpace: "ram" },
@@ -257,6 +257,71 @@ it.each([
     }
   },
 );
+
+it("keeps empty procedure names ambiguous in public comparisons", async () => {
+  const unnamedEvidence = (
+    source: typeof FUNCTION_COMPARISON_EXAMPLE.left,
+    digit: "2" | "3",
+  ) => {
+    const dossier = functionDossierSchema.parse(source.normalized_result);
+    dossier.procedure.name = "";
+    return createEvidence(
+      {
+        path: `/fixture/function-${digit}`,
+        sha256: digit.repeat(64),
+        format: "mach-o",
+      },
+      source.provider,
+      {
+        operation: source.operation,
+        parameters: source.parameters,
+        result: dossier,
+        confidence: source.confidence,
+        authority: source.authority,
+        ...(source.relationship_coverage === null
+          ? {}
+          : { relationshipCoverage: source.relationship_coverage }),
+      },
+    );
+  };
+  const left = unnamedEvidence(FUNCTION_COMPARISON_EXAMPLE.left, "2");
+  const right = unnamedEvidence(FUNCTION_COMPARISON_EXAMPLE.right, "3");
+  const session = createTestBinarySession(() => ({
+    health: () => Promise.resolve(),
+    execute: () => Promise.resolve(observed(null)),
+    close: () => Promise.resolve(resultOk(null)),
+  }));
+  const server = createServer({ kind: "session", session });
+  const client = new Client({ name: "function-empty-name-test", version: "1" });
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+  try {
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
+    const reply = await client.callTool({
+      name: "compare_functions",
+      arguments: { left, right },
+    });
+    expect(reply.isError, JSON.stringify(reply.structuredContent)).not.toBe(
+      true,
+    );
+    const comparison = parseEvidence(reply.structuredContent);
+    expect(comparison.normalized_result).toMatchObject({
+      status: "unknown",
+      function_match: {
+        status: "ambiguous",
+        method: "explicit",
+        left_name: "",
+        right_name: "",
+      },
+      dimensions: expect.arrayContaining([
+        expect.objectContaining({ dimension: "identity", status: "unknown" }),
+      ]),
+    });
+  } finally {
+    await Promise.allSettled([client.close(), server.close(), session.close()]);
+  }
+});
 
 describe("function comparison MCP integration", () => {
   it("records linked comparison Evidence and its residual unknown", async () => {

@@ -6,6 +6,7 @@ import type { FunctionSnapshot } from "./functionDossierEvidence.js";
 import {
   commentProjection,
   identityProjection,
+  hasStableFunctionName,
   isAutoName,
   nameAndSwiftProjection,
   normalizeCfg,
@@ -547,17 +548,22 @@ const compareIdentity = (
   right: FunctionSnapshot,
   context: ComparisonContext,
 ): FunctionDimension => {
-  if (
-    isAutoName(left.dossier.procedure.name) ||
-    isAutoName(right.dossier.procedure.name)
-  )
+  const names = [left.dossier.procedure.name, right.dossier.procedure.name];
+  if (names.some((name) => !hasStableFunctionName(name)))
     return unresolvedDimension({
       dimension: "identity",
       links: context.links,
       leftCount: null,
       rightCount: null,
       limitations: [
-        "Address-derived function names are not stable cross-version identity.",
+        ...(names.some((name) => name.length === 0)
+          ? ["Empty function names are not stable cross-version identity."]
+          : []),
+        ...(names.some(isAutoName)
+          ? [
+              "Address-derived function names are not stable cross-version identity.",
+            ]
+          : []),
       ],
     });
   return compareValues(
@@ -591,14 +597,22 @@ const compareCalls = (
       rightCount: rightValues.length,
       limitations: [...coverageLimitations, ...coverageDiagnostics],
     });
-  if ([...leftValues, ...rightValues].some(({ name }) => isAutoName(name)))
+  const unstableNames = [...leftValues, ...rightValues]
+    .map(({ name }) => name)
+    .filter((name) => !hasStableFunctionName(name));
+  if (unstableNames.length > 0)
     return unresolvedDimension({
       dimension: "calls",
       links: context.links,
       leftCount: leftValues.length,
       rightCount: rightValues.length,
       limitations: [
-        "Address-derived callee or caller names cannot be matched safely.",
+        ...(unstableNames.some((name) => name.length === 0)
+          ? ["Empty callee or caller names cannot be matched safely."]
+          : []),
+        ...(unstableNames.some(isAutoName)
+          ? ["Address-derived callee or caller names cannot be matched safely."]
+          : []),
         ...coverageDiagnostics,
       ],
     });

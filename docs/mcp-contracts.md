@@ -1153,6 +1153,10 @@ size limits.
 
 ### Function comparison limitations
 
+Only equal nonempty, non-address-derived procedure names establish
+`function_match.method: "symbol"`. An empty or address-derived name leaves the
+match ambiguous and the `identity` dimension unknown.
+
 `compare_functions` compares the `pseudocode` and `assembly` dimensions as
 exact provider text. A `changed` status establishes a textual difference, not a
 behavior change. Addresses and generated names are not normalized, so relocated
