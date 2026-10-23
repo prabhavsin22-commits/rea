@@ -59,6 +59,7 @@ export const projectStoredMember = (
   entry: CArchiveEntry,
   archiveStart: number,
   pythonMagic: Buffer | undefined,
+  posixCarrier: boolean,
 ): PyInstallerMember => {
   if (isCArchiveDeclaration(entry))
     return {
@@ -96,7 +97,7 @@ export const projectStoredMember = (
       kind: symlink ? "symlink" : "file",
       declaredSize,
       compressedSize: entry.compressedSize,
-      executable: entry.typeCode === "b",
+      executable: posixCarrier && entry.typeCode === BINARY_TYPE_CODE,
       byteOffset: sourceByteOffset(entry, archiveStart),
       limitations,
       adapterKey: `carchive:${String(entry.index)}:${entry.name}`,
@@ -305,6 +306,12 @@ const pyzMemberPath = (container: string, item: PyzEntry): string => {
   if (item.package) return `${container}/${dotted}/__init__.pyc`;
   return `${container}/${dotted}.pyc`;
 };
+
+/**
+ * The POSIX bootloader extracts only `b` (ARCHIVE_ITEM_BINARY) members with
+ * S_IXUSR; the Windows (PE) bootloader sets no execute bit.
+ */
+const BINARY_TYPE_CODE = "b";
 
 const isBytecodeType = (typeCode: string): boolean =>
   typeCode === "s" || typeCode === "m" || typeCode === "M";

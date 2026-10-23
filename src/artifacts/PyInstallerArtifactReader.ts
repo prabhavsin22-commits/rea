@@ -314,12 +314,16 @@ export class PyInstallerArtifactReader implements ArtifactReader {
       [...images.values()].map((image) => image.archive),
     );
     const encrypted = hasEncryptionMarker(toc);
+    const carrier = Buffer.alloc(2);
+    await handle.read(carrier, 0, 2, 0);
+    abortIfNeeded(signal);
     const members = await this.#project(
       toc,
       cookie,
       images,
       magic,
       encrypted,
+      !carrier.equals(Buffer.from("MZ")),
       signal,
     );
     for (const member of members)
@@ -478,6 +482,7 @@ export class PyInstallerArtifactReader implements ArtifactReader {
     images: ReadonlyMap<CArchiveEntry, PyzImage>,
     magic: Buffer | undefined,
     encrypted: boolean,
+    posixCarrier: boolean,
     signal: AbortSignal | undefined,
   ): Promise<PyInstallerMember[]> {
     const members: PyInstallerMember[] = [];
@@ -503,7 +508,9 @@ export class PyInstallerArtifactReader implements ArtifactReader {
       abortIfNeeded(signal);
       const image = entry.typeCode === "z" ? images.get(entry) : undefined;
       if (image === undefined) {
-        append(projectStoredMember(entry, cookie.archiveStart, magic));
+        append(
+          projectStoredMember(entry, cookie.archiveStart, magic, posixCarrier),
+        );
         continue;
       }
       append(projectPyzContainer(entry, cookie.archiveStart, image, encrypted));

@@ -560,6 +560,70 @@ it("rejects a zlib member that expands past its declared size", async () => {
   });
 });
 
+it("marks binary members executable, as the bootloader extracts them", async () => {
+  const path = await writeArchive(
+    "binary-member",
+    cArchiveExecutable({
+      layout: "2.1",
+      pythonVersion: 309,
+      pythonLibrary: "libpython3.9.so",
+      members: [
+        {
+          name: "helper.sh",
+          typeCode: "b",
+          payload: Buffer.from("#!/bin/sh\nexit 0\n"),
+          compress: false,
+        },
+        {
+          name: "healthy.txt",
+          typeCode: "x",
+          payload: Buffer.from("ok\n"),
+          compress: false,
+        },
+      ],
+    }),
+  );
+  const snapshot = await scanCanonicalArtifactInventory(path);
+  const member = (logicalPath: string) =>
+    snapshot.occurrences.find(
+      (occurrence) => occurrence.logical_path === logicalPath,
+    );
+  expect(member("helper.sh")).toMatchObject({
+    executable: true,
+    format_metadata: { type_code: "b" },
+  });
+  expect(member("healthy.txt")).toMatchObject({
+    executable: false,
+    format_metadata: { type_code: "x" },
+  });
+
+  // The Windows bootloader sets no execute bit, so a PE carrier's DLLs stay unmarked.
+  const pe = await writeArchive(
+    "binary-member-pe",
+    cArchiveExecutable({
+      layout: "2.1",
+      pythonVersion: 309,
+      pythonLibrary: "python39.dll",
+      carrier: Buffer.concat([Buffer.from("MZ"), Buffer.alloc(62)]),
+      members: [
+        {
+          name: "helper.dll",
+          typeCode: "b",
+          payload: Buffer.from("MZ"),
+          compress: false,
+        },
+      ],
+    }),
+  );
+  const reader = new PyInstallerArtifactReader(pe);
+  const listed = [];
+  for await (const entry of reader.entries()) listed.push(entry);
+  await reader.close();
+  expect(listed.find((entry) => entry.path === "helper.dll")).toMatchObject({
+    executable: false,
+  });
+});
+
 it("reads a compressed member whose uncompressed size is zero", async () => {
   const path = await writeArchive(
     "empty-compressed",
