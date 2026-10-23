@@ -49,6 +49,8 @@ const generator = () => {
     unique: "ref-9",
     renewed: ["renewed-9"],
     clock: NOW,
+    "nested-clock": { at: NOW },
+    "held-clock": NOW,
   };
   const generate = (rule: GeneratedRule) => {
     asked.push(rule);
@@ -96,7 +98,7 @@ it.each<[string, JsonObject | undefined, string]>([
   [
     "a fixed member with another value",
     { title: "B", priority: "LOW" },
-    `Member priority is accepted only with the value the capture sent, because the application stored it differently (${LISTED}).`,
+    `Member priority is accepted only with the value the capture sent, "HIGH", because the application stored it differently or other recorded fields go with it (${LISTED}).`,
   ],
   [
     "a number for a string",

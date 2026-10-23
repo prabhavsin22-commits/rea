@@ -21,7 +21,9 @@ import {
 import {
   collectionScope,
   literalPositions,
+  bodyTools,
   matchProbeRequest,
+  probeArguments,
   parameterScopes,
   type ProbeToolCall,
 } from "./environmentCompareMatch.js";
@@ -52,10 +54,7 @@ import {
   environmentToolAnswer,
   type EnvironmentToolAnswer,
 } from "./environmentToolAnswer.js";
-import {
-  environmentToolArguments,
-  type EnvironmentToolDefinition,
-} from "./environmentTools.js";
+import type { EnvironmentToolDefinition } from "./environmentTools.js";
 import { same } from "../../domain/analysisView/environmentStateRules.js";
 
 /** One probe capture file: its label for the report and its parsed JSON. */
@@ -216,7 +215,7 @@ const answersCall = (
     !selectsRecordedLine(call.tool, exchange, args)
   )
     return false;
-  const body = environmentToolArguments(call.tool).body;
+  const body = probeArguments(call.tool, run.bodies).body;
   // A tool with no body parameter matches; one that takes a body matches only the body this call sent, including none.
   if (body === undefined) return true;
   return same(run.recordedBodies.get(exchange.ordinal), args[body]);
@@ -246,6 +245,8 @@ interface ProbeRun {
   readonly store: EnvironmentStateStore | undefined;
   /** The tools the environment offers, by name, with their input checks. */
   readonly served: ReadonlyMap<string, InputCheck>;
+  /** The served tools that take a body their method does not, as a bulk delete names its entities. */
+  readonly bodies: ReadonlySet<string>;
   readonly map: IdMap;
   readonly normalised: Normalised;
 }
@@ -298,22 +299,20 @@ const compareStep = (
   // Matched in the environment's terms, so a tool whose path holds a seeded id literally still matches. Scopes and
   // literals come from the live path: translating a parent id first would name a different collection than learning did.
   const liveSegments = request.path.slice(1).split("/");
-  const fitted = matchProbeRequest(manifest, request);
+  const fitted = matchProbeRequest(manifest, request, run.bodies);
   const scopes =
     fitted === undefined
       ? undefined
       : parameterScopes(fitted.tool, liveSegments);
   const literals =
     fitted === undefined ? undefined : literalPositions(fitted.tool);
-  const call = matchProbeRequest(manifest, {
-    ...request,
-    path: translatePath(
-      request.path,
-      run.map,
-      (index) => scopes?.get(index),
-      (index) => literals?.has(index) === true,
-    ),
-  });
+  const path = translatePath(
+    request.path,
+    run.map,
+    (index) => scopes?.get(index),
+    (index) => literals?.has(index) === true,
+  );
+  const call = matchProbeRequest(manifest, { ...request, path }, run.bodies);
   if (call === undefined)
     return report(call, {
       env_status: null,
@@ -460,6 +459,7 @@ export const compareEnvironment = (input: {
       inputCheck(definition),
     ]),
   );
+  const bodies = bodyTools(catalog.value.tools);
   const recorded = parseCaptureEvidence(
     operation,
     input.captureValue,
@@ -507,6 +507,7 @@ export const compareEnvironment = (input: {
       answer: environmentToolAnswer(source, store),
       store,
       served,
+      bodies,
       map: new IdMap(),
       normalised: emptyNormalised(),
     };

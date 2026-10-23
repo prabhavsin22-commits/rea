@@ -29,6 +29,7 @@ import { singleQueryValues } from "../recordedTransportUrl.js";
 import type { ServedLine } from "./environmentStateCheckedLines.js";
 import { insertIndex } from "./environmentStateWriteExplain.js";
 import type { InsertRule } from "./environmentStateWriteRules.js";
+import { withoutMembers } from "./environmentStateResponseMembers.js";
 
 export const entityTarget = (type: string, collection: string, id: string) =>
   `e${compositeKey([type, collection, id])}`;
@@ -50,6 +51,8 @@ export class SimulatedState {
   readonly #documents = new Map<string, JsonValue>();
   readonly #removed: RemovedTarget[] = [];
   readonly #served = new ServedOrder();
+  /** Each held id's targets, of any type. */
+  readonly #named = new Map<string, Set<string>>();
 
   constructor(
     entities: readonly StateEntity[],
@@ -85,6 +88,13 @@ export class SimulatedState {
       .filter((entity) => entity.type === type);
   }
 
+  /** The entities of any type held under an id. */
+  named(id: string): StateEntity[] {
+    return [...(this.#named.get(id) ?? [])].map((key) =>
+      this.#entities.get(key)!,
+    );
+  }
+
   knownCollections(type: string): readonly string[] {
     return this.#served.known(type);
   }
@@ -95,6 +105,10 @@ export class SimulatedState {
     const known = this.#entities.has(key);
     this.#entities.set(key, entity);
     if (known) return;
+    this.#named.set(
+      entity.id,
+      (this.#named.get(entity.id) ?? new Set()).add(key),
+    );
     const collection = collectionTarget(entity.type, entity.collection);
     const order = this.#collections.get(collection) ?? [];
     const at = index ?? order.length;
@@ -107,6 +121,7 @@ export class SimulatedState {
   remove(entity: StateEntity): void {
     const key = entityTarget(entity.type, entity.collection, entity.id);
     this.#entities.delete(key);
+    this.#named.get(entity.id)?.delete(key);
     this.#served.remove(key);
     const collection = collectionTarget(entity.type, entity.collection);
     const order = this.#collections.get(collection) ?? [];
@@ -581,16 +596,17 @@ export const checkListRead = (
 /** A document read on its checked line must equal the held document. */
 export const checkDocumentRead = (
   state: SimulatedState,
-  tool: string,
+  view: Extract<StateView, { shape: "document" }>,
   record: StateRecordFacts,
   body: JsonValue | undefined,
 ): CheckOutcome | undefined => {
   if (!succeeded(record)) return undefined;
-  const value = state.document(tool);
+  const value = state.document(view.tool);
   if (body === undefined || value === undefined) return undefined;
+  const minted = view.per_response_members;
   return {
-    pass: same(value, body),
-    targets: [documentTarget(tool)],
+    pass: same(withoutMembers(value, minted), withoutMembers(body, minted)),
+    targets: [documentTarget(view.tool)],
     unheld: [],
   };
 };

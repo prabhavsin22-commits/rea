@@ -6,7 +6,10 @@ import type {
   EnvironmentManifest,
   EnvironmentManifestTool,
 } from "./environmentSource.js";
-import { environmentToolArguments } from "./environmentTools.js";
+import {
+  environmentToolArguments,
+  type EnvironmentToolDefinition,
+} from "./environmentTools.js";
 
 const FORMAT_RULES: ReadonlySet<string> = new Set([
   "numeric",
@@ -136,10 +139,32 @@ const fitOf = (
   return { tool, literals };
 };
 
-/** The tool of the request's method whose template fits the path with the most literal segments; the manifest's order breaks ties. */
+/** A tool's arguments as the served catalog offers them: a body too when `bodies` names it. */
+export const probeArguments = (
+  tool: EnvironmentManifestTool,
+  bodies: ReadonlySet<string>,
+) => environmentToolArguments(tool, bodies.has(tool.name) ? true : undefined);
+
+/** The served tools whose catalog takes a body, by name, as a bulk delete names its entities in one. */
+export const bodyTools = (
+  definitions: readonly EnvironmentToolDefinition[],
+): Set<string> =>
+  new Set(
+    definitions.flatMap((definition) =>
+      Object.hasOwn(
+        definition.inputSchema.properties,
+        environmentToolArguments(definition.tool, true).body!,
+      )
+        ? [definition.name]
+        : [],
+    ),
+  );
+
+/** The tool of the request's method whose template fits the path with the most literal segments; the manifest's order breaks ties. `bodies` names the tools a served catalog gives a body beyond their method's. */
 export const matchProbeRequest = (
   manifest: EnvironmentManifest,
   request: ProbeRequest,
+  bodies: ReadonlySet<string> = new Set(),
 ): ProbeToolCall | undefined => {
   const segments = request.path.slice(1).split("/");
   let best: Fit | undefined;
@@ -154,7 +179,7 @@ export const matchProbeRequest = (
   }
   if (best === undefined) return undefined;
   const { tool } = best;
-  const names = environmentToolArguments(tool);
+  const names = probeArguments(tool, bodies);
   const args: Record<string, JsonValue> = {};
   const pathArguments: string[] = [];
   for (const param of tool.params) {

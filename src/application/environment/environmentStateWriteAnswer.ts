@@ -15,6 +15,14 @@ import {
 } from "../../domain/analysisView/environmentStateWriteExplain.js";
 import { callRenewal } from "../../domain/analysisView/environmentStateWriteGenerated.js";
 import {
+  nestedClockValue,
+  unenveloped,
+} from "../../domain/analysisView/environmentStateWriteStamps.js";
+import {
+  linkedCollection,
+  sameLinkedSource,
+} from "../../domain/analysisView/environmentStateWriteLinks.js";
+import {
   pathValuesOf,
   type GeneratedRule,
   type StateWritePlan,
@@ -22,13 +30,12 @@ import {
 } from "../../domain/analysisView/environmentStateWriteRules.js";
 import {
   formatClock,
-  isUuid,
-  seededToken,
-  seededUuid,
+  seededLike,
   spelledLike,
 } from "../../domain/analysisView/environmentStateWriteValues.js";
 import {
   collectionMatch,
+  decodedSegment,
   isObject,
   scalarText,
   type JsonObject,
@@ -62,16 +69,13 @@ import {
   unloadableMember,
   type HeldDocument,
 } from "./environmentStateDocument.js";
-import {
-  environmentToolArguments,
-  hasRepeatedQueryArgument,
-} from "./environmentTools.js";
+import { environmentToolArguments } from "./environmentTools.js";
 
 /** Attempts at a generated UUID or token before a collision with held values is refused. */
 const GENERATION_ATTEMPTS = 64;
 
 /** One served write call: the tool, its plan and its arguments. */
-interface WriteRequest {
+export interface WriteRequest {
   readonly tool: EnvironmentManifestTool;
   readonly plan: StateWritePlan;
   readonly args: ReplayArguments;
@@ -79,7 +83,7 @@ interface WriteRequest {
 }
 
 /** The path values a call supplies, keyed by template segment as write plans name them. */
-const pathValues = (
+export const pathValues = (
   tool: EnvironmentManifestTool,
   args: ReplayArguments,
 ): Map<string, string> => {
@@ -97,7 +101,7 @@ const pathValues = (
 };
 
 /** A refusal for a value `data/add` would refuse, so `data/get` always reports a state that loads back. */
-const unloadable = (
+export const unloadable = (
   tool: EnvironmentManifestTool,
   holder: string,
 ): AnalysisError =>
@@ -106,15 +110,25 @@ const unloadable = (
     `${holder} would hold a value that is not exactly representable JSON, which data/add could not load back.`,
   );
 
-/** The call's body: an object, nothing, or a refusal for any other value or one holding a value the state cannot hold. */
+/** The call's body: an object, unwrapped from the envelope the capture sent it in, nothing, or a refusal for any other value or one holding a value the state cannot hold. */
 const callBody = ({
   tool,
   args,
+  plan,
 }: WriteRequest): Result<JsonObject | undefined, AnalysisError> => {
   const name = environmentToolArguments(tool).body;
-  const value = name === undefined ? undefined : args[name];
-  if (value === undefined) return ok(undefined);
-  if (!isObject(value as JsonValue))
+  const sent = name === undefined ? undefined : args[name];
+  if (sent === undefined) return ok(undefined);
+  const envelope = plan.body?.envelope ?? "";
+  const value = unenveloped(sent as JsonValue, plan.body?.envelope);
+  if (value === undefined)
+    return err(
+      refused(
+        tool,
+        `Tool ${tool.name} takes its JSON object body wrapped as {"${envelope}":[{...}]}, as the capture sent it.`,
+      ),
+    );
+  if (!isObject(value))
     return err(refused(tool, `Tool ${tool.name} takes a JSON object body.`));
   const member = unloadableMember(value as JsonObject);
   return member === undefined
@@ -123,7 +137,7 @@ const callBody = ({
 };
 
 /** The entity a recorded observation shows: the values a create keeps and an update's constants. */
-const observedEntity = (
+export const observedEntity = (
   serving: StateServing,
   plan: StateWritePlan,
 ): JsonObject | undefined => {
@@ -152,7 +166,7 @@ const nextHeld = (
  * value, and UUIDs and tokens seeded by the state Evidence, tool, field and write count,
  * skipping values the type already holds.
  */
-const generator = (
+export const generator = (
   serving: StateServing,
   request: WriteRequest,
   target: {
@@ -202,7 +216,14 @@ const generator = (
       `${store.state.evidenceId}:${request.tool.name}:${rule.field}:${String(write.count)}:${String(attempt)}`;
     switch (rule.rule) {
       case "clock":
+      case "held-clock":
         return ok(formatClock(write.clockMs, rule.format));
+      case "nested-clock":
+        return nestedClockValue(
+          (target.current ?? target.observed)[rule.field],
+          rule,
+          formatClock(write.clockMs, rule.format),
+        );
       case "sequence":
         return ok(
           spelledLike(
@@ -221,7 +242,7 @@ const generator = (
         );
       case "unique":
         return unused(rule.field, (attempt) =>
-          seededUuid(seed(attempt), String(exemplar)),
+          seededLike(seed(attempt), exemplar),
         );
       case "renewed":
         return ok(
@@ -247,9 +268,7 @@ const generator = (
             ),
           );
         return unused(rule.field, (attempt) =>
-          rule.generator === "uuid" || isUuid(exemplar)
-            ? seededUuid(seed(attempt), String(exemplar))
-            : seededToken(seed(attempt), String(exemplar)),
+          seededLike(seed(attempt), exemplar, rule.generator === "uuid"),
         );
     }
   };
@@ -257,10 +276,14 @@ const generator = (
 };
 
 /** A write's answer on its recorded response's status and content type: a rendered body, none, or the recorded one. */
-const writeAnswer = (
+export const writeAnswer = (
   serving: StateServing,
   request: WriteRequest,
-  rendered: { readonly fields: JsonObject | undefined; readonly id: string },
+  rendered:
+    | { readonly fields: JsonObject | undefined; readonly id: string }
+    | ((
+        recorded: JsonValue | undefined,
+      ) => Result<JsonValue | undefined, string>),
   state: StateProvenance,
 ): Result<StateAnswer, AnalysisError> => {
   const { plan, tool, args } = request;
@@ -279,9 +302,92 @@ const writeAnswer = (
     )?.exact === true;
   if (plan.response.shape === "recorded")
     return ok({ ...replayAnswer(serving.source, exchange, exact), state });
-  const body = writtenResponse(plan.response, recordedJson(exchange), rendered);
+  const recorded = recordedJson(exchange);
+  const body =
+    typeof rendered === "function"
+      ? rendered(recorded)
+      : writtenResponse(plan.response, recorded, rendered);
   if (!body.ok) return err(refused(tool, body.error));
   return stateAnswer(serving, { exchange, exact }, body.value ?? null, state);
+};
+
+/** The path arguments a call supplies as given, by the template segment each fills. */
+const pathArguments = (
+  tool: EnvironmentManifestTool,
+  args: ReplayArguments,
+): Map<number, string> => {
+  const names = environmentToolArguments(tool).path;
+  return new Map(
+    tool.params.flatMap((param) => {
+      const value = args[names.get(param.name) ?? param.name];
+      return typeof value === "string" ? [[param.index, value] as const] : [];
+    }),
+  );
+};
+
+/** The path of the recorded call a plan was built from. */
+const exemplarPath = (
+  serving: StateServing,
+  plan: StateWritePlan,
+): string | undefined =>
+  plan.exemplar_ordinal === null
+    ? undefined
+    : serving.source.exchanges.get(plan.exemplar_ordinal)?.path;
+
+/** The collection a create writes into: a linked plan's, only for its exemplar's path arguments, else the one the call's path selects. */
+const writtenCollection = (
+  serving: StateServing,
+  request: WriteRequest,
+): Result<string | undefined, AnalysisError> => {
+  const { tool, plan } = request;
+  const linked = linkedCollection(plan, tool.path_template);
+  if (linked === undefined)
+    return ok(
+      createdCollection(serving, tool, request.args, plan.target ?? ""),
+    );
+  // No read showed where other path arguments create.
+  return sameLinkedSource(
+    tool.path_template,
+    exemplarPath(serving, plan),
+    pathArguments(tool, request.args),
+  )
+    ? ok(linked)
+    : err(
+        refused(
+          tool,
+          `Tool ${tool.name} creates into ${linked} only with the path arguments its recording sent.`,
+        ),
+      );
+};
+
+/**
+ * The path values a create's path fields take, decoded once as the gate learned them: a linked
+ * create accepts its exemplar's source only, so it takes that; another the collection this call
+ * selects, else its own arguments.
+ */
+const createdPathValues = (
+  serving: StateServing,
+  request: WriteRequest,
+  call: WriteCall,
+  collection: string,
+): ReadonlyMap<string, string> => {
+  const { tool, plan } = request;
+  const exemplar =
+    linkedCollection(plan, tool.path_template) === undefined
+      ? undefined
+      : exemplarPath(serving, plan);
+  return (
+    (exemplar === undefined
+      ? undefined
+      : pathValuesOf(tool.path_template, exemplar)) ??
+    pathValuesOf(tool.path_template, collection) ??
+    new Map(
+      [...call.pathValues].map(([name, value]) => [
+        name,
+        decodedSegment(value),
+      ]),
+    )
+  );
 };
 
 const answerCreate = (
@@ -292,12 +398,9 @@ const answerCreate = (
   const { tool, plan } = request;
   const type = plan.target ?? "";
   const idField = serving.store.type(type)?.id_field ?? "";
-  const collection = createdCollection(
-    serving,
-    request.tool,
-    request.args,
-    plan.target ?? "",
-  );
+  const target = writtenCollection(serving, request);
+  if (!target.ok) return target;
+  const collection = target.value;
   const observed = observedEntity(serving, plan);
   if (collection === undefined || observed === undefined)
     return err(
@@ -319,10 +422,9 @@ const answerCreate = (
     collection: members,
     observed,
   });
-  // The gate learned path rules from the recorded path, decoded; the collection is this call's.
   const created = {
     ...call,
-    pathValues: pathValuesOf(tool.path_template, collection) ?? call.pathValues,
+    pathValues: createdPathValues(serving, request, call, collection),
   };
   const fields = createdFields(plan, observed, created, values.generate);
   if (!fields.ok) return err(refused(tool, fields.error));
@@ -379,7 +481,7 @@ const targetEntity = (
   request: WriteRequest,
 ): Result<StateEntity, Result<StateAnswer, AnalysisError>> => {
   const { tool, plan, args } = request;
-  const call = itemCall(tool, args);
+  const call = itemCall(tool, args, plan.address?.by === "action");
   if (call === undefined)
     return err(
       err(refused(tool, `Tool ${tool.name} needs every path argument.`)),
@@ -543,13 +645,6 @@ export const answerWrite = (
   serving: StateServing,
   request: WriteRequest,
 ): Result<StateAnswer, AnalysisError> => {
-  if (hasRepeatedQueryArgument(request.tool, request.args))
-    return err(
-      refused(
-        request.tool,
-        "The state write model cannot apply repeated query parameters; the state is unchanged.",
-      ),
-    );
   const body = callBody(request);
   if (!body.ok) return body;
   const call: WriteCall = {
