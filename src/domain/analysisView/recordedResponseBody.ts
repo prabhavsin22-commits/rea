@@ -37,7 +37,9 @@ export const readRecordedResponseBody = (
   if (!content.success) return { bodyText: null };
   const { text, encoding } = content.data.response.content;
   if (typeof text !== "string") return { bodyText: null };
-  if (encoding !== "base64") return { bodyText: text };
+  if (encoding !== undefined && encoding !== null && encoding !== "base64")
+    return { bodyText: null };
+  if (encoding === undefined || encoding === null) return { bodyText: text };
   const binary = record.binary_fields.find(
     (field) =>
       field.pointer === "/response/content/text" && field.state === "retained",
